@@ -1,0 +1,353 @@
+{{! Copyright (c) Mark Voortman - mark@voortman.name. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.}}
+<h2>Builder</h2>
+<div id="menu"></div>
+<hr>
+<div id="content"></div>
+<hr>
+
+<script>
+ function save(alldata, cb) {
+   $.ajax({
+     type: "POST",
+     url: "/save_data",
+     data: {
+       data: JSON.stringify(alldata)
+     }
+   }).done(function(data) {
+     if (data.error) {
+       console.log(JSON.stringify(data.error));
+       alert(JSON.stringify(data.error));
+     }
+     else {
+       if (cb) {
+         cb();
+       }
+       else {
+         syllabi(alldata);
+       }
+     }
+   }).fail(fail);
+ }
+ 
+ function syllabi(alldata) {
+   $("#menu").empty();
+   $("#content").empty();
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("New");
+   a.click(function() {
+     personalinfo(alldata);
+   });
+   if (!alldata.syllabi || !alldata.syllabi.length) {
+     $("#content").append("No syllabi found.");
+   }
+   else {
+     for (var i = 0; i < alldata.syllabi.length; i++) {
+       (function(i) {
+         if (i) {
+           $("#content").append("<hr>");
+         }
+         var a = $("<a>");
+         $("#content").append(a);
+         a.addClass("btn btn-outline-primary btn-sm");
+         a.attr("href", "javascript:");
+         a.append("Edit");
+         a.click(function() {
+           personalinfo(alldata, alldata.syllabi[i]);
+         });
+         $("#content").append(" ");
+         var a = $("<a>");
+         $("#content").append(a);
+         a.addClass("btn btn-outline-danger btn-sm");
+         a.attr("href", "javascript:");
+         a.append("Delete");
+         a.click(function() {
+           if (confirm("Are you sure you want to delete this item?")) {
+             alldata.syllabi.splice(i, 1);
+             save(alldata);
+           }
+         });
+         var info = alldata.syllabi[i].info || {};
+         $("#content").append(" " + ((info.CourseCode + info.CourseName) ? info.CourseCode + " - " + info.CourseName : "???"));
+       })(i);
+     }
+   }
+ }
+ 
+ function personalinfo(alldata, syllabus) {
+   if (!syllabus) {
+     syllabus = {};
+     if (!alldata.syllabi) {
+       alldata.syllabi = [];
+     }
+     alldata.syllabi.push(syllabus);
+   }
+   $("#menu").empty();
+   $("#content").empty();
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Back");
+   a.click(function() {
+     save(alldata);
+   });
+   $("#menu").append(" ");
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Next");
+   a.click(function() {
+     alldata.info.Email = alldata.email;
+     save(alldata, function() {
+       courseinfo(alldata, syllabus);
+     });
+   });
+   $("#content").append("<b>Personal Info</b><br>");
+   function addEntry(name) {
+     $("#content").append("<br>");
+     $("#content").append(name);
+     var input = $("<input>");
+     $("#content").append(input);
+     input.addClass("form-control");
+     var property = name.replace(/ /g, "");
+     input.keyup(function() {
+       if (!alldata.info) {
+         alldata.info = {};
+       }
+       alldata.info[property] = input.val();
+     });
+     input.change(function() {
+       if (!alldata.info) {
+         alldata.info = {};
+       }
+       alldata.info[property] = input.val();
+     });
+     if (alldata.info && alldata.info[property]) {
+       input.val(alldata.info[property]);
+     }
+   }
+   addEntry("Name");
+   addEntry("Office Location");
+   addEntry("Office Phone");
+   addEntry("Office Hours");
+ }
+ 
+ function courseinfo(alldata, syllabus) {
+   $("#menu").empty();
+   $("#content").empty();
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Back");
+   a.click(function() {
+     personalinfo(alldata, syllabus);
+   });
+   $("#menu").append(" ");
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Next");
+   a.click(function() {
+     goedit(alldata, syllabus);
+   });
+   $("#content").append("<b>Course Info</b><br>");
+   function addEntry(name) {
+     $("#content").append("<br>");
+     $("#content").append(name);
+     var input = $("<input>");
+     $("#content").append(input);
+     input.addClass("form-control");
+     var property = name.replace(/ /g, "");
+     input.keyup(function() {
+       if (!syllabus.info) {
+         syllabus.info = {};
+       }
+       syllabus.info[property] = input.val();
+     });
+     input.change(function() {
+       if (!syllabus.info) {
+         syllabus.info = {};
+       }
+       syllabus.info[property] = input.val();
+     });
+     if (syllabus.info && syllabus.info[property]) {
+       input.val(syllabus.info[property]);
+     }
+   }
+   addEntry("Course Code");
+   addEntry("Course Name");
+   addEntry("Semester");
+   addEntry("Date First Class");
+ }
+ 
+ function goedit(alldata, syllabus) {
+   $.ajax({
+     type: "GET",
+     url: "/load_template"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       var template = data.template;
+       // fill in personal info
+       for (var key in alldata.info) {
+         var regexp = new RegExp("\{{"+key+"}}", "g");
+         template = template.replace(regexp, alldata.info[key]);
+       }
+       // fill in course info
+       if (syllabus.info) {
+         for (var key in syllabus.info) {
+           var regexp = new RegExp("\{{"+key+"}}", "g");
+           template = template.replace(regexp, syllabus.info[key]);
+         }
+         // insert dates
+         if (syllabus.info.DateFirstClass) {
+           var datefirstclass = syllabus.info.DateFirstClass;
+           var date = new Date(datefirstclass);
+           var cnt = 0;
+             while (cnt < 15) {
+             cnt++;
+             var regexp = new RegExp("\{{Week"+cnt+"Date}}", "g");
+             template = template.replace(regexp, (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear());
+             date = new Date(date.getFullYear(), date.getMonth(), date.getDate()+7);
+           }
+         }
+       }
+       if (!syllabus.fields) {
+         syllabus.fields = {};
+       }
+       var data = [];
+       var parts = template.split("\{{");
+       for (var i = 1; i < parts.length; i++) {
+         var property = parts[i].substr(0, parts[i].indexOf("}}"));
+         if (property.startsWith("Week") && property.endsWith("Date")) {
+           // do not add
+         }
+         else {
+           if (!syllabus.fields[property]) {
+             syllabus.fields[property] = "";
+           }
+           var idx = template.indexOf("\{{"+property+"}}");
+           var usetextarea = idx === 0 || (idx > 0 && template[idx-1] === "\n")
+           data.push({
+             property: property,
+             value: syllabus.fields[property],
+             usetextarea: usetextarea
+           });
+         }
+       }
+       edit(alldata, syllabus, template, data, syllabus.fields, 0);
+     }
+   }).fail(fail);
+ }
+ 
+ function edit(alldata, syllabus, origtemplate, data, fields, idx) {
+   $("#menu").empty();
+   $("#content").empty();
+   $("#content").append('<div id="buttons"></div><div id="output"></div>');
+   
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Back");
+   a.click(function() {
+     courseinfo(alldata, syllabus);
+   });
+   $("#menu").append(" ");
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Save");
+   a.click(function() {
+     save(alldata, function() {
+       syllabi(alldata);
+     });
+   });
+   
+   var template = origtemplate;
+   if (idx < 0) {
+     idx = data.length - 1;
+   }
+   if (idx >= data.length) {
+     idx = 0;
+   }
+   // replace other fields
+   for (var i = 0; i < data.length; i++) {
+     var entry = data[i];
+     var regexp = new RegExp("\{{"+entry.property+"}}", "g");
+     template = template.replace(regexp, "<span id='entry"+i+"'>"+(entry.value?entry.value:"["+entry.property+"]")+"</span>");
+   }
+   $("#output").empty();
+   var innerdiv = $("<div>");
+   $("#output").append(innerdiv);
+   innerdiv.css("padding", "10px");
+   innerdiv.append(marked(template, {breaks:true}));
+   for (var i = 0; i < data.length; i++) {
+     (function(i) {
+       $("#entry"+i).css("color", "red");
+       $("#entry"+i).css("cursor", "pointer");
+       $("#entry"+i).click(function() {
+         edit(alldata, syllabus, origtemplate, data, fields, i);
+       });
+     })(i);
+   }
+   $("#entry"+idx).empty();
+   var input = data[idx].usetextarea ? $("<textarea>") : $("<input>");
+   $("#entry"+idx).append(input);
+   if (data[idx].usetextarea) {
+     input.css("width", "500px");
+     input.css("height", "150px");
+   }
+   input.css("color", "red");
+   input.css("background-color", "#ffe6e6");
+   input.css("border", "3px solid red");
+   input.attr("placeholder", data[idx].property);
+   input.val(data[idx].value);
+   input.keydown(function(e) {
+     if (e.keyCode === 9) {
+       if (e.preventDefault) {
+         e.preventDefault();
+       }
+       if (e.shiftKey) {
+         edit(alldata, syllabus, origtemplate, data, fields, idx-1);
+       }
+       else {
+         edit(alldata, syllabus, origtemplate, data, fields, idx+1);
+       }
+       return false;
+     }
+   });
+   input.keyup(function() {
+     data[idx].value = input.val();
+     fields[data[idx].property] = input.val();
+   });
+   input.change(function() {
+     data[idx].value = input.val();
+     fields[data[idx].property] = input.val();
+   });
+   input.focus();
+ }
+ 
+ window.onload = function() {
+   $.ajax({
+     type: "GET",
+     url: "/load_data"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       syllabi(data);
+     }
+   }).fail(fail);
+ }
+</script>
