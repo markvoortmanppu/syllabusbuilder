@@ -1,9 +1,9 @@
 {{! Copyright (c) Mark Voortman - mark@voortman.name. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.}}
-<h2>Builder</h2>
+<h2 id="header">Builder</h2>
 <div id="menu"></div>
-<hr>
+<hr id="hr1">
 <div id="content"></div>
-<hr>
+<hr id="hr2">
 
 <script>
  function save(alldata, cb) {
@@ -272,6 +272,17 @@
        syllabi(alldata);
      });
    });
+   $("#menu").append(" ");
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Print View");
+   a.click(function() {
+     save(alldata, function() {
+       print(alldata, syllabus, origtemplate, data, fields);
+     });
+   });
    
    var template = origtemplate;
    if (idx < 0) {
@@ -335,6 +346,29 @@
      fields[data[idx].property] = input.val();
    });
    input.focus();
+ }
+ 
+ function print(alldata, syllabus, origtemplate, data, fields) {
+   $("#header").remove();
+   $("#menu").remove();
+   $("#hr1").remove();
+   $("#hr2").remove();
+   $("#content").empty();
+   $("#content").append('<div id="buttons"></div><div id="output"></div>');
+   
+   var template = origtemplate;
+   
+   // replace other fields
+   for (var i = 0; i < data.length; i++) {
+     var entry = data[i];
+     var regexp = new RegExp("\{{"+entry.property+"}}", "g");
+     template = template.replace(regexp, entry.value?entry.value:"");
+   }
+   $("#output").empty();
+   var innerdiv = $("<div>");
+   $("#output").append(innerdiv);
+   innerdiv.css("padding", "10px");
+   innerdiv.append(marked(template, {breaks:true}));
  }
  
  window.onload = function() {
