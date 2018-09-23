@@ -218,8 +218,6 @@
              var oldDateStr = syllabus.info[property];
              var parts = oldDateStr.split("/");
              var newDateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
-             console.log(oldDateStr);
-             console.log(newDateStr);
              syllabus.info[property] = newDateStr;
            }
            input.val(syllabus.info[property]);
