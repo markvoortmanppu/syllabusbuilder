@@ -70,7 +70,22 @@
            }
          });
          var info = alldata.syllabi[i].info || {};
-         $("#content").append(" " + ((info.CourseCode + info.CourseName) ? info.CourseCode + " - " + info.CourseName : "???"));
+         var desc = "???";
+         function addDescPart(descpart) {
+           if (descpart) {
+             if (desc === "???") {
+               desc = descpart;
+             }
+             else {
+               desc += " - " + descpart;
+             }
+           }
+         }
+         addDescPart(info.CourseCode);
+         addDescPart(info.CourseName);
+         addDescPart(info.Semester);
+         addDescPart(info.CourseDuration);
+         $("#content").append(" " + desc);
        })(i);
      }
    }
@@ -137,53 +152,108 @@
  }
  
  function courseinfo(alldata, syllabus) {
-   $("#menu").empty();
-   $("#content").empty();
-   var a = $("<a>");
-   $("#menu").append(a);
-   a.addClass("btn btn-primary btn-sm");
-   a.attr("href", "javascript:");
-   a.append("Back");
-   a.click(function() {
-     personalinfo(alldata, syllabus);
-   });
-   $("#menu").append(" ");
-   var a = $("<a>");
-   $("#menu").append(a);
-   a.addClass("btn btn-primary btn-sm");
-   a.attr("href", "javascript:");
-   a.append("Next");
-   a.click(function() {
-     goedit(alldata, syllabus);
-   });
-   $("#content").append("<b>Course Info</b><br>");
-   function addEntry(name) {
-     $("#content").append("<br>");
-     $("#content").append(name);
-     var input = $("<input>");
-     $("#content").append(input);
-     input.addClass("form-control");
-     var property = name.replace(/ /g, "");
-     input.keyup(function() {
-       if (!syllabus.info) {
-         syllabus.info = {};
-       }
-       syllabus.info[property] = input.val();
-     });
-     input.change(function() {
-       if (!syllabus.info) {
-         syllabus.info = {};
-       }
-       syllabus.info[property] = input.val();
-     });
-     if (syllabus.info && syllabus.info[property]) {
-       input.val(syllabus.info[property]);
+   $.ajax({
+     type: "GET",
+     url: "/load_templates"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
      }
-   }
-   addEntry("Course Code");
-   addEntry("Course Name");
-   addEntry("Semester");
-   addEntry("Date First Class");
+     else {
+       $("#menu").empty();
+       $("#content").empty();
+       var a = $("<a>");
+       $("#menu").append(a);
+       a.addClass("btn btn-primary btn-sm");
+       a.attr("href", "javascript:");
+       a.append("Back");
+       a.click(function() {
+         personalinfo(alldata, syllabus);
+       });
+       $("#menu").append(" ");
+       var a = $("<a>");
+       $("#menu").append(a);
+       a.addClass("btn btn-primary btn-sm");
+       a.attr("href", "javascript:");
+       a.append("Next");
+       a.click(function() {
+         save(alldata, function() {
+           goedit(alldata, syllabus);
+         });
+       });
+       $("#content").append("<b>Course Info</b><br>");
+       function addEntry(name, options, isDate) {
+         $("#content").append("<br>");
+         $("#content").append(name);
+         var input = !options ? $("<input>") : $("<select>");
+         $("#content").append(input);
+         input.addClass("form-control");
+         if (isDate) {
+           input.attr("type", "date");
+         }
+         if (options) {
+           for (var i = 0; i < options.length; i++) {
+             var option = $("<option>");
+             input.append(option);
+             option.attr("value", options[i].value);
+             option.append(options[i].label);
+           }
+         }
+         var property = name.replace(/ /g, "");
+         input.keyup(function() {
+           if (!syllabus.info) {
+             syllabus.info = {};
+           }
+           syllabus.info[property] = input.val();
+         });
+         input.change(function() {
+           if (!syllabus.info) {
+             syllabus.info = {};
+           }
+           syllabus.info[property] = input.val();
+         });
+         if (syllabus.info && syllabus.info[property]) {
+           if (syllabus.info[property].indexOf("/") >= 0) {
+             // TODO: remove this if statement
+             var oldDateStr = syllabus.info[property];
+             var parts = oldDateStr.split("/");
+             var newDateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
+             console.log(oldDateStr);
+             console.log(newDateStr);
+             syllabus.info[property] = newDateStr;
+           }
+           input.val(syllabus.info[property]);
+         }
+         if (options) {
+           input.change();
+         }
+       }
+       addEntry("Course Code");
+       addEntry("Course Name");
+       var options = [{
+         value: "15 Weeks",
+         label: "15 Weeks"
+       }, {
+         value: "8 Weeks",
+         label: "8 Weeks"
+       }];
+       addEntry("Course Duration", options);
+       var options = [{
+         value: "Fall 2018",
+         label: "Fall 2018"
+       }];
+       addEntry("Semester", options);
+       addEntry("Date First Class", null, true);
+       var options = [];
+       for (var i = 0; i < data.templates.length; i++) {
+         options.push({
+           value: data.templates[i].id,
+           label: data.templates[i].info.Name
+         });
+       }
+       addEntry("Template", options);
+     }
+   }).fail(fail);
  }
  
  function isThanksgivingWeek(date) {
@@ -236,13 +306,22 @@
  function goedit(alldata, syllabus) {
    $.ajax({
      type: "GET",
-     url: "/load_template"
+     url: "/load_templates"
    }).done(function(data) {
      if (data.error) {
        alert(data.error);
      }
      else {
-       var template = data.template;
+       var template = null;
+       for (var i = 0; i < data.templates.length; i++) {
+         if (data.templates[i].id === syllabus.info.Template) {
+           template = data.templates[i].template;
+           break;
+         }
+       }
+       if (template === null) {
+         alert("Cannot find template!");
+       }
        // fill in personal info
        for (var key in alldata.info) {
          var regexp = new RegExp("\{{"+key+"}}", "g");
@@ -265,13 +344,19 @@
          }
          var datefirstclass = syllabus.info.DateFirstClass;
          var date = new Date(datefirstclass);
+         var duration = 15;
+         if (syllabus.info.CourseDuration === "8 Weeks") {
+           duration = 8;
+         }
          var cnt = 0;
-         while (cnt < 15) {
+         var thanksgiving = false;
+         while ((!thanksgiving && cnt < duration) || (thanksgiving && cnt < duration - 1)) {
            var datestr = (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear();
            if (isThanksgivingWeek(date)) {
              // skip the thanksgiving week
              template += "### Thanksgiving Break (" + datestr + ")";
              template += "\n";
+             thanksgiving = true;
            }
            else if (isSpringBreakWeek(date, new Date(datefirstclass))) {
              // skip the spring break week
