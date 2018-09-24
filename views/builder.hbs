@@ -348,7 +348,7 @@
          }
          var cnt = 0;
          var thanksgiving = false;
-         while ((!thanksgiving && cnt < duration) || (thanksgiving && cnt < duration - 1)) {
+         while (cnt < duration - (duration === 8 && thanksgiving ? 1 : 0)) {
            var datestr = (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear();
            if (isThanksgivingWeek(date)) {
              // skip the thanksgiving week
