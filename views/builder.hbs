@@ -301,6 +301,15 @@
    }
  }
  
+ function newDate(str) {
+   var date = new Date();
+   if (str) {
+     var parts = str.split("-");
+     date = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+   }
+   return date;
+ }
+ 
  function goedit(alldata, syllabus) {
    $.ajax({
      type: "GET",
@@ -341,7 +350,7 @@
            template += "\n";
          }
          var datefirstclass = syllabus.info.DateFirstClass;
-         var date = new Date(datefirstclass);
+         var date = newDate(datefirstclass);
          var duration = 15;
          if (syllabus.info.CourseDuration === "8 Weeks") {
            duration = 8;
@@ -356,7 +365,7 @@
              template += "\n";
              thanksgiving = true;
            }
-           else if (isSpringBreakWeek(date, new Date(datefirstclass))) {
+           else if (isSpringBreakWeek(date, newDate(datefirstclass))) {
              // skip the spring break week
              template += "### Spring Break (" + datestr + ")";
              template += "\n";
