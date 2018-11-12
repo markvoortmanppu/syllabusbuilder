@@ -1,0 +1,67 @@
+<div>
+  Enter course code (e.g., CMPS 361):<br>
+  <input id="input" type="text" class="form-control"></input><br>
+  <div id="outputdiv"></div>
+  <textarea id="output" class="form-control" style="height: 500px;"></textarea>
+</div>
+
+<script>
+ var CATALOG = null;
+ 
+ function loadCatalogData() {
+   $.ajax({
+     type: "GET",
+     url: "/load_catalog_data"
+   }).done(function(data) {
+     console.log(data);
+     CATALOG = data;
+   }).fail(fail);
+ }
+
+ function normalize(code) {
+   code = code || "";
+   return code.toUpperCase().replace(/ /g, "");
+ }
+ 
+ window.onload = function() {
+   if (!CATALOG) {
+     loadCatalogData();
+   }
+   var prefix = "</b></u><br><br>";
+   var postfix = "<br><br><b><u>";
+   $("#input").bind("change keydown keyup", function() {
+     var code = normalize($("#input").val());
+     $("#output").val("No results.");
+     if (CATALOG) {
+       for (var i = 0; i < CATALOG.length; i++) {
+         if (normalize(CATALOG[i].crs_cde) === code) {
+           var str = "Code: " + CATALOG[i].crs_cde + "\n";
+           str += "Title: " + CATALOG[i].crs_title + CATALOG[i].crs_title_2 + "\n";
+           str += "Credits: " + CATALOG[i].dflt_credit_hrs + "\n";
+           var text = CATALOG[i].catalog_text;
+           text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
+           var endIndex = text.indexOf(postfix) >= 0 ? text.indexOf(postfix) : text.length;
+           var desc = text.substr(0, endIndex).replace(/<br>/g, "\n").trim();
+           text = text.substr(endIndex);
+           var prereqs = "None.";
+           var parts = desc.split("Prerequisite");
+           if (parts.length === 2) {
+              desc = parts[0].trim();
+              prereqs = parts[1].substring(parts[1].indexOf(":") + 1).trim();
+           }
+           str += "Prerequisite(s): " + prereqs + "\n";
+           str += "\nDescription:\n" + desc + "\n";
+           text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
+           var objectives = text.replace(/<br>/g, "\n").replace(/\n\n/g, "\n").trim();
+           str += "\nObjectives:\n" + objectives + "\n";
+           str += "\n\n\n";
+           str += CATALOG[i].catalog_text + "\n";
+           str += "\n\n\n" + JSON.stringify(CATALOG[i], null, 2);
+           $("#output").val(str);
+         }
+       }
+     }
+   });
+ };
+ 
+</script>

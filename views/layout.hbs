@@ -23,12 +23,18 @@
             <a class="nav-link" href="/">Home</a>
           </li>
           {{#if user}}
-            <li class="nav-item{{#if active.builder}} active{{/if}}">
-              <a class="nav-link" href="/builder">Builder</a>
+            <li class="nav-item{{#if active.schoology}} active{{/if}}">
+              <a class="nav-link" href="/schoology">Schoology</a>
             </li>
             {{#if admin}}
               <li class="nav-item{{#if active.templates}} active{{/if}}">
                 <a class="nav-link" href="/templates">Templates</a>
+              </li>
+              <li class="nav-item{{#if active.builder}} active{{/if}}">
+                <a class="nav-link" href="/builder">Builder</a>
+              </li>
+              <li class="nav-item{{#if active.courses}} active{{/if}}">
+                <a class="nav-link" href="/courses">Courses</a>
               </li>
             {{/if}}
           {{/if}}
@@ -73,6 +79,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <!-- add marked -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.4.0/marked.min.js" integrity="sha256-JaznSM5IwXQK1AyjtxCTklRL05ar/8zo+oty8fS+AMc=" crossorigin="anonymous"></script>
+    <script src="sylbuilder.js"></script>
     <script>
       function fail(jqXHR, textStatus, errorThrown) {
         console.log(jqXHR);

@@ -7,15 +7,23 @@ var favicon = require("serve-favicon");
 var logger = require("morgan");
 var cookieParser = require("cookie-parser");
 var bodyParser = require("body-parser");
+var sylbuilder = require("./public/sylbuilder");
+var md5file = require("md5-file");
+var markdownpdf = require("markdown-pdf");
+const csv = require("csvtojson");
 
 require("dotenv").config();
 
 var index = require("./routes/index");
 var authorize = require("./routes/authorize");
 var builder = require("./routes/builder");
+var courses = require("./routes/courses");
+var schoology = require("./routes/schoology");
 var templates = require("./routes/templates");
 
 var authHelper = require("./helpers/auth");
+
+var schlgy = require("./schoology");
 
 var app = express();
 
@@ -34,6 +42,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", index);
 app.use("/authorize", authorize);
 app.use("/builder", builder);
+app.use("/courses", courses);
+app.use("/schoology", schoology);
 app.use("/templates", templates);
 
 app.post("/save_templates", async function(req, res, next) {
@@ -49,7 +59,7 @@ app.post("/save_templates", async function(req, res, next) {
   }
 });
 
-app.get("/load_templates", async function(req, res, next) {
+async function loadTemplates(req, res, cb) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const userEmail = req.cookies.graph_user_email;
   if (accessToken && userEmail) {
@@ -59,9 +69,15 @@ app.get("/load_templates", async function(req, res, next) {
       if (err && err.code !== "ENOENT") {
         tmp.error = err;
       }
-      res.send(tmp);
+      cb(tmp);
     });
   }
+}
+
+app.get("/load_templates", async function(req, res, next) {
+  loadTemplates(req, res, function(data) {
+    res.send(data);
+  });
 });
 
 app.post("/save_data", async function(req, res, next) {
@@ -77,7 +93,7 @@ app.post("/save_data", async function(req, res, next) {
   }
 });
 
-app.get("/load_data", async function(req, res, next) {
+async function loadData(req, res, cb) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const userEmail = req.cookies.graph_user_email;
   if (accessToken && userEmail) {
@@ -90,7 +106,174 @@ app.get("/load_data", async function(req, res, next) {
       if (!tmp.email) {
         tmp.email = userEmail;
       }
-      res.send(tmp);
+      cb(tmp);
+    });
+  }
+}
+
+app.get("/load_data", async function(req, res, next) {
+  loadData(req, res, function(data) {
+    res.send(data);
+  });
+});
+
+app.get("/load_catalog_data", async function(req, res, next) {
+  csv()
+    .fromFile("data/catalog.csv")
+    .then(function(jsondata) {
+      res.send(jsondata);
+    });
+});
+
+app.get("/load_schoology_data", async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  const userEmail = req.cookies.graph_user_email;
+  if (accessToken && userEmail) {
+    res.setHeader("Content-Type", "application/json");
+    fs.readFile("data/" + userEmail + ":schoology.json", "utf8", function(err, datastr) {
+      var tmp = err ? {} : JSON.parse(datastr);
+      if (err && err.code !== "ENOENT") {
+        tmp.error = err;
+      }
+      if (!tmp.credentials) {
+        tmp.notInitialized = true;
+        res.send(tmp);
+      }
+      else {
+        schlgy.init(tmp.credentials.consumerkey, tmp.credentials.consumersecret, function(instance) {
+          instance.getSections(function(sections) {
+            res.send({
+              sections: sections
+            });
+          });
+        });
+      }
+    });
+  }
+});
+
+app.post("/set_schoology_credentials", async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  const userEmail = req.cookies.graph_user_email;
+  if (accessToken && userEmail) {
+    res.setHeader("Content-Type", "application/json");
+    fs.writeFile("data/" + userEmail + ":schoology.json", req.body.data+"\n", "utf8", function(err) {
+      res.send(JSON.stringify({
+        error: err
+      }));
+    });
+  }
+});
+
+function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, cb) {
+  var syllabus = null;
+  for (var i = syllabidata.syllabi.length-1; i >= 0; i--) {
+    if (syllabidata.syllabi[i].info.SectionID === sectionid) {
+      syllabus = syllabidata.syllabi[i];
+    }
+  }
+  var alldata = {
+    email: syllabidata.email,
+    info: syllabidata.info,
+    syllabi: syllabidata.syllabi,
+    syllabus: syllabus
+  };
+
+  var result = sylbuilder.prepare(templatedata, alldata);
+  if (result === null) {
+    cb({
+      error: "Error while preparing syllabus."
+    });
+    return;
+  }
+  var template = result.template;
+  var data = result.data;
+
+  // replace other fields
+  for (var i = 0; i < data.length; i++) {
+    var entry = data[i];
+    var regexp = new RegExp("\{{"+entry.property+"}}", "g");
+    template = template.replace(regexp, entry.value?entry.value:"");
+  }
+
+  var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
+  //fs.writeFile(tmpname, template, function(err) {
+  markdownpdf().from.string(template).to(tmpname, function(err) {
+    if (err) {
+      cb({
+        error: err.toString()
+      });
+    }
+    else {
+      fs.stat(tmpname, function(err, stats) {
+        if (err) {
+          cb({
+            error: err.toString()
+          });
+        }
+        else {
+          md5file(tmpname, function(err, hash) {
+            if (err) {
+              cb({
+                error: err.toString()
+              });
+            }
+            else {
+              schlgy.init(credentials.consumerkey, credentials.consumersecret, function(instance) {
+                instance.uploadFile({
+                  fpath: tmpname,
+                  fname: "Syllabus" + syllabus.info.CourseCode + ".pdf",
+                  fsize: stats.size,
+                  mimetype: "application/pdf",
+                  md5: hash
+                }, function(data) {
+                  cb(data);
+                });
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+}
+
+app.get("/upload", async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  const userEmail = req.cookies.graph_user_email;
+  if (accessToken && userEmail) {
+    res.setHeader("Content-Type", "application/json");
+    fs.readFile("data/" + userEmail + ":schoology.json", "utf8", function(err, datastr) {
+      var tmp = err ? {} : JSON.parse(datastr);
+      if (err && err.code !== "ENOENT") {
+        tmp.error = err;
+      }
+      if (!tmp.credentials) {
+        tmp.notInitialized = true;
+        res.send(tmp);
+      }
+      else {
+        loadTemplates(req, res, function(templatedata) {
+          loadData(req, res, function(syllabidata) {
+            createAndUploadPdf(tmp.credentials, templatedata, syllabidata, req.query.section_id, function(data) {
+              if (data.error) {
+                res.send(data);
+              }
+              else {
+                schlgy.init(tmp.credentials.consumerkey, tmp.credentials.consumersecret, function(instance) {
+                  instance.addDocumentFile({
+                    sectionid: req.query.section_id,
+                    title: "Syllabus",
+                    fileid: data.fileid
+                  }, function() {
+                    res.send({});
+                  });
+                });
+              }
+            });
+          });
+        });
+      }
     });
   }
 });

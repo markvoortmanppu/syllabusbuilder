@@ -1,0 +1,631 @@
+{{! Copyright (c) Mark Voortman - mark@voortman.name. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.}}
+<h2 id="header">Schoology</h2>
+<div id="menu"></div>
+<hr id="hr1">
+<div id="content"></div>
+<hr id="hr2">
+
+<script>
+ 
+ function save(alldata, cb) {
+   var tmpdata = {
+     email: alldata.email,
+     info: alldata.info,
+     syllabi: alldata.syllabi
+   };
+   $.ajax({
+     type: "POST",
+     url: "/save_data",
+     data: {
+       data: JSON.stringify(tmpdata)
+     }
+   }).done(function(data) {
+     if (data.error) {
+       console.log(JSON.stringify(data.error));
+       alert(JSON.stringify(data.error));
+     }
+     else {
+       if (cb) {
+         cb();
+       }
+       else {
+         initSchoology();
+       }
+     }
+   }).fail(fail);
+ }
+ 
+ function initSchoology() {
+   var content = $("#content");
+   content.empty();
+   content.append("Please wait ...");
+   $.ajax({
+     type: "GET",
+     url: "/load_schoology_data"
+   }).done(function(data) {
+     content.empty();
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       if (data.notInitialized) {
+         setSchoologyCredentials();
+       }
+       else {
+         showSchoology(data);
+       }
+     }
+   }).fail(fail);
+ }
+ 
+ function setSchoologyCredentials() {
+   var menu = $("#menu");
+   var content = $("#content");
+   menu.empty();
+   content.empty();
+   content.append("<b>Schoology Credentials</b><br>");
+   content.append("Click on <a href=\"https://pointpark.schoology.com/api\" target=\"_blank\">this</a> link and copy-paste the keys below (IMPORTANT: do not share with anyone!).<br>");
+   content.append("Consumer Key");
+   var consumerkey = $("<input>");
+   content.append(consumerkey);
+   consumerkey.addClass("form-control");
+   content.append("Consumer Secret");
+   var consumersecret = $("<input>");
+   content.append(consumersecret);
+   consumersecret.addClass("form-control");
+   var a = $("<a>");
+   $("#content").append(a);
+   a.addClass("btn btn-outline-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Submit");
+   a.click(function() {
+     if (!consumerkey.val() || !consumersecret.val()) {
+       return;
+     }
+     $.ajax({
+       type: "POST",
+       url: "/set_schoology_credentials",
+       data: {
+         data: JSON.stringify({
+           credentials: {
+             consumerkey: consumerkey.val(),
+             consumersecret: consumersecret.val()
+           }
+         })
+       }
+     }).done(function(data) {
+       if (data.error) {
+         console.log(JSON.stringify(data.error));
+         alert(JSON.stringify(data.error));
+       }
+       else {
+         initSchoology();
+       }
+     }).fail(fail);
+   });
+ }
+ 
+ function showSchoology(data) {
+   var menu = $("#menu");
+   var content = $("#content");
+   menu.empty();
+   content.empty();
+   content.append("<b>Available Courses</b><br>");
+   //content.append(JSON.stringify(data));
+   for (var i = 0; i < data.sections.section.length; i++) {
+     (function(i) {
+       var section = data.sections.section[i];
+       var parts = section.section_title.split(" ");
+       if (parts[0] !== "OAON" && parts[1] === "SP18") {
+         $("#content").append("<hr>");
+         var a = $("<a>");
+         content.append(a);
+         a.addClass("btn btn-outline-primary btn-sm");
+         a.attr("href", "javascript:");
+         a.click(function() {
+           selectSyllabus({
+             section: section
+           });
+         });
+         a.append(section.course_code + " " + section.course_title + " " + section.section_title);
+         content.append("<br>");
+       }
+     })(i);
+   }
+ }
+ 
+ function selectSyllabus(alldata) {
+   var menu = $("#menu");
+   var content = $("#content");
+   menu.empty();
+   content.empty();
+   $.ajax({
+     type: "GET",
+     url: "/load_data"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       alldata.email = data.email;
+       alldata.info = data.info;
+       alldata.syllabi = data.syllabi;
+       for (var i = 0; i < alldata.syllabi.length; i++) {
+         if (alldata.syllabi[i].info && alldata.syllabi[i].info.SectionID === alldata.section.id) {
+           alldata.syllabus = alldata.syllabi[i];
+         }
+       }
+       if (!alldata.syllabus) {
+         alldata.syllabus = {
+           info: {
+             Email: alldata.email,
+             SectionID: alldata.section.id,
+             CourseCode: alldata.section.course_code,
+             CourseName: alldata.section.course_title,
+             Section: alldata.section.section_title.split(" ")[0],
+             Semester: alldata.section.section_title.split(" ")[1]
+           }
+         };
+         alldata.syllabi.push(alldata.syllabus);
+       }
+       personalinfo(alldata);
+     }
+   }).fail(fail);
+ }
+ 
+ function personalinfo(alldata) {
+   $("#menu").empty();
+   $("#content").empty();
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Back");
+   a.click(function() {
+     save(alldata);
+   });
+   $("#menu").append(" ");
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Next");
+   a.click(function() {
+     alldata.info.Email = alldata.email;
+     save(alldata, function() {
+       findtemplate(alldata);
+     });
+   });
+   $("#content").append("<b>Personal Info</b><br>");
+   function addEntry(name) {
+     $("#content").append("<br>");
+     $("#content").append(name);
+     var input = $("<input>");
+     $("#content").append(input);
+     input.addClass("form-control");
+     var property = name.replace(/ /g, "");
+     input.keyup(function() {
+       alldata.info[property] = input.val();
+     });
+     input.change(function() {
+       alldata.info[property] = input.val();
+     });
+     if (alldata.info && alldata.info[property]) {
+       input.val(alldata.info[property]);
+     }
+   }
+   if (!alldata.info) {
+     alldata.info = {};
+   }
+   addEntry("Name");
+   addEntry("Office Location");
+   addEntry("Office Phone");
+   addEntry("Office Hours");
+ }
+ 
+ function findtemplate(alldata) {
+   $.ajax({
+     type: "GET",
+     url: "/load_templates"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       var name = alldata.syllabus.info.CourseCode;
+       name = name.substring(0, name.length - 3);
+       var template = null;
+       for (var i = 0; i < data.templates.length; i++) {
+         if (data.templates[i].info.Name === name) {
+           template = data.templates[i].id;
+           break;
+         }
+       }
+       if (!template) {
+         alert("No template found for " + name);
+       }
+       else {
+         alldata.syllabus.info.Template = template;
+         filldata(alldata);
+       }
+     }
+   });
+ }
+
+ var CATALOG = null;
+ 
+ function loadCatalogData(cb) {
+   if (CATALOG) {
+     cb(CATALOG);
+   }
+   else {
+     $.ajax({
+       type: "GET",
+       url: "/load_catalog_data"
+     }).done(function(data) {
+       CATALOG = data;
+       cb(CATALOG);
+     }).fail(fail);
+   }
+ }
+ 
+ function filldata(alldata) {
+   loadCatalogData(function(catalog) {
+     var name = alldata.syllabus.info.CourseCode;
+     var info = findcourse(catalog, name);
+     for (var key in info) {
+       alldata.syllabus.info[key] = info[key];
+     }
+     coursedates(alldata);
+   });
+ }
+
+ function normalize(code) {
+   code = code || "";
+   return code.toUpperCase().replace(/ /g, "");
+ }
+ 
+ function findcourse(catalog, code) {
+   var prefix = "</b></u><br><br>";
+   var postfix = "<br><br><b><u>";
+   for (var i = 0; i < catalog.length; i++) {
+     if (normalize(catalog[i].crs_cde) === code) {
+       var data = {};
+       data.CourseCode = normalize(catalog[i].crs_cde);
+       data.CourseName = catalog[i].crs_title + catalog[i].crs_title_2;
+       data.Credits = catalog[i].dflt_credit_hrs;
+       var text = catalog[i].catalog_text;
+       text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
+       var endIndex = text.indexOf(postfix) >= 0 ? text.indexOf(postfix) : text.length;
+       var desc = text.substr(0, endIndex).replace(/<br>/g, "\n").trim();
+       data.CourseDescription = desc;
+       text = text.substr(endIndex);
+       var prereqs = "None.";
+       var parts = desc.split("Prerequisite");
+       if (parts.length === 2) {
+         desc = parts[0].trim();
+         prereqs = parts[1].substring(parts[1].indexOf(":") + 1).trim();
+       }
+       data.Prerequisites = prereqs;
+       text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
+       var objectives = text.replace(/<br>/g, "\n").replace(/\n\n/g, "\n").trim();
+       data.CourseObjectives = objectives;
+       return data;
+     }
+   }
+   return null;
+ }
+ 
+ /*
+ function courseinfo(alldata) {
+   $.ajax({
+     type: "GET",
+     url: "/load_templates"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       $("#menu").empty();
+       $("#content").empty();
+       var a = $("<a>");
+       $("#menu").append(a);
+       a.addClass("btn btn-primary btn-sm");
+       a.attr("href", "javascript:");
+       a.append("Back");
+       a.click(function() {
+         personalinfo(alldata);
+       });
+       $("#menu").append(" ");
+       var a = $("<a>");
+       $("#menu").append(a);
+       a.addClass("btn btn-primary btn-sm");
+       a.attr("href", "javascript:");
+       a.append("Next");
+       a.click(function() {
+         save(alldata, function() {
+           coursedates(alldata);
+         });
+       });
+       $("#content").append("<b>Course Info</b><br>");
+       function addEntry(name, options, isDate) {
+         $("#content").append("<br>");
+         $("#content").append(name);
+         var input = !options ? $("<input>") : $("<select>");
+         $("#content").append(input);
+         input.addClass("form-control");
+         if (isDate) {
+           input.attr("type", "date");
+         }
+         if (options) {
+           for (var i = 0; i < options.length; i++) {
+             var option = $("<option>");
+             input.append(option);
+             option.attr("value", options[i].value);
+             option.append(options[i].label);
+           }
+         }
+         var property = name.replace(/ /g, "");
+         input.keyup(function() {
+           if (!alldata.syllabus.info) {
+             alldata.syllabus.info = {};
+           }
+           alldata.syllabus.info[property] = input.val();
+         });
+         input.change(function() {
+           if (!alldata.syllabus.info) {
+             alldata.syllabus.info = {};
+           }
+           alldata.syllabus.info[property] = input.val();
+         });
+         if (alldata.syllabus.info && alldata.syllabus.info[property]) {
+           if (alldata.syllabus.info[property].indexOf("/") >= 0) {
+             // TODO: remove this if statement
+             var oldDateStr = alldata.syllabus.info[property];
+             var parts = oldDateStr.split("/");
+             var newDateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
+             alldata.syllabus.info[property] = newDateStr;
+           }
+           input.val(alldata.syllabus.info[property]);
+         }
+         if (options) {
+           input.change();
+         }
+       }
+       addEntry("Course Code");
+       addEntry("Course Name");
+       var options = [{
+         value: "15 Weeks",
+         label: "15 Weeks"
+       }, {
+         value: "8 Weeks",
+         label: "8 Weeks"
+       }];
+       addEntry("Course Duration", options);
+       addEntry("Section");
+       if (alldata.syllabus.info.Semester === "Fall 2018") {
+         alldata.syllabus.info.Semester = "FA18";
+       }
+       var options = [{
+         value: "FA18",
+         label: "FA18"
+       }];
+       addEntry("Semester", options);
+       addEntry("Date First Class", null, true);
+       var options = [];
+       for (var i = 0; i < data.templates.length; i++) {
+         options.push({
+           value: data.templates[i].id,
+           label: data.templates[i].info.Name
+         });
+       }
+       addEntry("Template", options);
+     }
+   }).fail(fail);
+ }
+ */
+ 
+ function coursedates(alldata) {
+   $("#menu").empty();
+   $("#content").empty();
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Back");
+   a.click(function() {
+     personalinfo(alldata);
+   });
+   $("#menu").append(" ");
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Next");
+   a.click(function() {
+     save(alldata, function() {
+       goedit(alldata);
+     });
+   });
+   $("#content").append("<b>Course Dates</b><br>");
+   function addEntry(name, options, isDate) {
+     $("#content").append("<br>");
+     $("#content").append(name);
+     var input = !options ? $("<input>") : $("<select>");
+     $("#content").append(input);
+     input.addClass("form-control");
+     if (isDate) {
+       input.attr("type", "date");
+     }
+     if (options) {
+       for (var i = 0; i < options.length; i++) {
+         var option = $("<option>");
+         input.append(option);
+         option.attr("value", options[i].value);
+         option.append(options[i].label);
+       }
+     }
+     var property = name.replace(/ /g, "");
+     input.keyup(function() {
+       if (!alldata.syllabus.info) {
+         alldata.syllabus.info = {};
+       }
+       alldata.syllabus.info[property] = input.val();
+     });
+     input.change(function() {
+       if (!alldata.syllabus.info) {
+         alldata.syllabus.info = {};
+       }
+       alldata.syllabus.info[property] = input.val();
+     });
+     if (alldata.syllabus.info && alldata.syllabus.info[property]) {
+       if (alldata.syllabus.info[property].indexOf("/") >= 0) {
+         // TODO: remove this if statement
+         var oldDateStr = alldata.syllabus.info[property];
+         var parts = oldDateStr.split("/");
+         var newDateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
+         alldata.syllabus.info[property] = newDateStr;
+       }
+       input.val(alldata.syllabus.info[property]);
+     }
+     if (options) {
+       input.change();
+     }
+   }
+   addEntry("Date First Class", null, true);
+ }
+ 
+ function goedit(alldata) {
+   $.ajax({
+     type: "GET",
+     url: "/load_templates"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       var result = sylbuilder.prepare(data, alldata);
+       edit(alldata, result.template, result.data, alldata.syllabus.fields, 0);
+     }
+   }).fail(fail);
+ }
+ 
+ function edit(alldata, origtemplate, data, fields, idx) {
+   $("#menu").empty();
+   $("#content").empty();
+   $("#content").append('<div id="buttons"></div><div id="output"></div>');
+   
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Back");
+   a.click(function() {
+     coursedates(alldata);
+   });
+   $("#menu").append(" ");
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Save");
+   a.click(function() {
+     save(alldata, function() {
+       initSchoology();
+     });
+   });
+   $("#menu").append(" ");
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Upload to Schoology");
+   a.click(function() {
+     $("#menu").empty();
+     $("#content").empty();
+     $("#content").append("Please wait ...");
+     save(alldata, function() {
+       $.ajax({
+         type: "GET",
+         url: "/upload?section_id=" + alldata.section.id
+       }).done(function(data) {
+         if (data.error) {
+           alert(data.error);
+         }
+         else {
+           $("#content").empty();
+           $("#content").append("Syllabus was uploaded!");
+         }
+       }).fail(fail);
+     });
+   });
+   
+   var template = origtemplate;
+   if (idx < 0) {
+     idx = data.length - 1;
+   }
+   if (idx >= data.length) {
+     idx = 0;
+   }
+   // replace other fields
+   for (var i = 0; i < data.length; i++) {
+     var entry = data[i];
+     var regexp = new RegExp("\{{"+entry.property+"}}", "g");
+     template = template.replace(regexp, "<span id='entry"+i+"'>"+(entry.value?entry.value:"["+entry.property+"]")+"</span>");
+   }
+   $("#output").empty();
+   var innerdiv = $("<div>");
+   $("#output").append(innerdiv);
+   innerdiv.css("padding", "10px");
+   innerdiv.append(marked(template, {breaks:true}));
+   for (var i = 0; i < data.length; i++) {
+     (function(i) {
+       $("#entry"+i).css("color", "red");
+       $("#entry"+i).css("cursor", "pointer");
+       $("#entry"+i).click(function() {
+         edit(alldata, origtemplate, data, fields, i);
+       });
+     })(i);
+   }
+   $("#entry"+idx).empty();
+   var input = data[idx].usetextarea ? $("<textarea>") : $("<input>");
+   $("#entry"+idx).append(input);
+   if (data[idx].usetextarea) {
+     input.css("width", "500px");
+     input.css("height", "150px");
+   }
+   input.css("color", "red");
+   input.css("background-color", "#ffe6e6");
+   input.css("border", "3px solid red");
+   input.attr("placeholder", data[idx].property);
+   input.val(data[idx].value);
+   input.keydown(function(e) {
+     if (e.keyCode === 9) {
+       if (e.preventDefault) {
+         e.preventDefault();
+       }
+       if (e.shiftKey) {
+         edit(alldata, origtemplate, data, fields, idx-1);
+       }
+       else {
+         edit(alldata, origtemplate, data, fields, idx+1);
+       }
+       return false;
+     }
+   });
+   input.keyup(function() {
+     data[idx].value = input.val();
+     fields[data[idx].property] = input.val();
+   });
+   input.change(function() {
+     data[idx].value = input.val();
+     fields[data[idx].property] = input.val();
+   });
+   input.focus();
+ }
+ 
+ window.onload = function() {
+    initSchoology();
+ };
+ 
+</script>

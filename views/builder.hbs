@@ -99,6 +99,9 @@
      }
      alldata.syllabi.push(syllabus);
    }
+   if (!alldata.info) {
+     alldata.info = {};
+   }
    $("#menu").empty();
    $("#content").empty();
    var a = $("<a>");
@@ -130,15 +133,9 @@
      input.addClass("form-control");
      var property = name.replace(/ /g, "");
      input.keyup(function() {
-       if (!alldata.info) {
-         alldata.info = {};
-       }
        alldata.info[property] = input.val();
      });
      input.change(function() {
-       if (!alldata.info) {
-         alldata.info = {};
-       }
        alldata.info[property] = input.val();
      });
      if (alldata.info && alldata.info[property]) {
@@ -236,9 +233,12 @@
          label: "8 Weeks"
        }];
        addEntry("Course Duration", options);
+       if (syllabus.info.Semester === "Fall 2018") {
+         syllabus.info.Semester = "FA18";
+       }
        var options = [{
-         value: "Fall 2018",
-         label: "Fall 2018"
+         value: "FA18",
+         label: "FA18"
        }];
        addEntry("Semester", options);
        addEntry("Date First Class", null, true);
