@@ -233,10 +233,16 @@
          label: "8 Weeks"
        }];
        addEntry("Course Duration", options);
-       if (syllabus.info.Semester === "Fall 2018") {
+       if (syllabus.info.Semester === "Spring 2019") {
+         syllabus.info.Semester = "SP19";
+       }
+       else if (syllabus.info.Semester === "Fall 2018") {
          syllabus.info.Semester = "FA18";
        }
        var options = [{
+         value: "SP19",
+         label: "SP19"
+       },
          value: "FA18",
          label: "FA18"
        }];
