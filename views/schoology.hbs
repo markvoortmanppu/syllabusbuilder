@@ -276,7 +276,7 @@
      for (var key in info) {
        alldata.syllabus.info[key] = info[key];
      }
-     coursedates(alldata);
+     courseinfo(alldata);
    });
  }
 
@@ -316,116 +316,7 @@
    return null;
  }
  
- /*
  function courseinfo(alldata) {
-   $.ajax({
-     type: "GET",
-     url: "/load_templates"
-   }).done(function(data) {
-     if (data.error) {
-       alert(data.error);
-     }
-     else {
-       $("#menu").empty();
-       $("#content").empty();
-       var a = $("<a>");
-       $("#menu").append(a);
-       a.addClass("btn btn-primary btn-sm");
-       a.attr("href", "javascript:");
-       a.append("Back");
-       a.click(function() {
-         personalinfo(alldata);
-       });
-       $("#menu").append(" ");
-       var a = $("<a>");
-       $("#menu").append(a);
-       a.addClass("btn btn-primary btn-sm");
-       a.attr("href", "javascript:");
-       a.append("Next");
-       a.click(function() {
-         save(alldata, function() {
-           coursedates(alldata);
-         });
-       });
-       $("#content").append("<b>Course Info</b><br>");
-       function addEntry(name, options, isDate) {
-         $("#content").append("<br>");
-         $("#content").append(name);
-         var input = !options ? $("<input>") : $("<select>");
-         $("#content").append(input);
-         input.addClass("form-control");
-         if (isDate) {
-           input.attr("type", "date");
-         }
-         if (options) {
-           for (var i = 0; i < options.length; i++) {
-             var option = $("<option>");
-             input.append(option);
-             option.attr("value", options[i].value);
-             option.append(options[i].label);
-           }
-         }
-         var property = name.replace(/ /g, "");
-         input.keyup(function() {
-           if (!alldata.syllabus.info) {
-             alldata.syllabus.info = {};
-           }
-           alldata.syllabus.info[property] = input.val();
-         });
-         input.change(function() {
-           if (!alldata.syllabus.info) {
-             alldata.syllabus.info = {};
-           }
-           alldata.syllabus.info[property] = input.val();
-         });
-         if (alldata.syllabus.info && alldata.syllabus.info[property]) {
-           if (alldata.syllabus.info[property].indexOf("/") >= 0) {
-             // TODO: remove this if statement
-             var oldDateStr = alldata.syllabus.info[property];
-             var parts = oldDateStr.split("/");
-             var newDateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
-             alldata.syllabus.info[property] = newDateStr;
-           }
-           input.val(alldata.syllabus.info[property]);
-         }
-         if (options) {
-           input.change();
-         }
-       }
-       addEntry("Course Code");
-       addEntry("Course Name");
-       var options = [{
-         value: "15 Weeks",
-         label: "15 Weeks"
-       }, {
-         value: "8 Weeks",
-         label: "8 Weeks"
-       }];
-       addEntry("Course Duration", options);
-       addEntry("Section");
-       if (alldata.syllabus.info.Semester === "Fall 2018") {
-         alldata.syllabus.info.Semester = "FA18";
-       }
-       var options = [{
-         value: "FA18",
-         label: "FA18"
-       }];
-       addEntry("Semester", options);
-       addEntry("Date First Class", null, true);
-       var options = [];
-       for (var i = 0; i < data.templates.length; i++) {
-         options.push({
-           value: data.templates[i].id,
-           label: data.templates[i].info.Name
-         });
-       }
-       addEntry("Template", options);
-     }
-   }).fail(fail);
- }
- */
- 
- function coursedates(alldata) {
    $("#menu").empty();
    $("#content").empty();
    var a = $("<a>");
@@ -447,7 +338,7 @@
        goedit(alldata);
      });
    });
-   $("#content").append("<b>Course Dates</b><br>");
+   $("#content").append("<b>Course Info</b><br>");
    function addEntry(name, options, isDate) {
      $("#content").append("<br>");
      $("#content").append(name);
@@ -493,6 +384,92 @@
      }
    }
    addEntry("Date First Class", null, true);
+   $("#content").append("<br>Upload Appendix (PDFs only)");
+   var status = $("<div>");
+   $("#content").append(status);
+   var showStatus = function() {
+     status.empty();
+     if (!alldata.syllabus.info.PdfFileAppendix) {
+       input.show();
+     }
+     else {
+       var a = $("<a>");
+       status.append(a);
+       a.append(alldata.syllabus.info.PdfFileAppendix.name);
+       a.attr("href", "files/" + alldata.syllabus.info.PdfFileAppendix.id + "/" + alldata.syllabus.info.PdfFileAppendix.name);
+       a.attr("target", "_blank");
+       status.append(" (");
+       var a = $("<a>");
+       status.append(a);
+       a.append("delete");
+       a.attr("href", "javascript:");
+       a.css("color", "red");
+       status.append(")");
+       a.click(function() {
+         alldata.syllabus.info.PdfFileAppendix = "";
+         save(alldata, function() {
+           showStatus();
+         });
+       });
+       input.hide();
+     }
+   };
+   var progress = $("<progress>");
+   $("#content").append(progress);
+   progress.hide();
+   var form = $("<form>");
+   $("#content").append(form);
+   form.attr("enctype", "multipart/form-data");
+   var input = $("<input>");
+   form.append(input);
+   input.addClass("form-control");
+   input.attr("type", "file");
+   input.attr("name", "file");
+   input.attr("accept", "application/pdf");
+   input.change(function() {
+     if (input.val()) {
+       $.ajax({
+         url: "/fileupload",
+         type: "POST",
+         data: new FormData(form[0]),
+         cache: false,
+         contentType: false,
+         processData: false,
+         xhr: function() {
+           var myXhr = $.ajaxSettings.xhr();
+           if (myXhr.upload) {
+             progress.show();
+             myXhr.upload.addEventListener("progress", function(e) {
+               if (e.lengthComputable) {
+                 progress.attr({
+                   value: e.loaded,
+                   max: e.total,
+                 });
+               }
+             }, false);
+           }
+           return myXhr;
+         }
+       }).done(function(tmpdata) {
+         if (tmpdata.error) {
+           console.log(JSON.stringify(tmpdata.error));
+           alert(JSON.stringify(tmpdata.error));
+         }
+         else {
+           progress.hide();
+           alldata.syllabus.info.PdfFileAppendix = {
+             id: tmpdata.id,
+             name: tmpdata.name
+           };
+           input.val("");
+           save(alldata, function() {
+             showStatus();
+           });
+         }
+       }).fail(fail);
+     }
+   });
+   showStatus();
  }
  
  function goedit(alldata) {
@@ -521,7 +498,7 @@
    a.attr("href", "javascript:");
    a.append("Back");
    a.click(function() {
-     coursedates(alldata);
+     courseinfo(alldata);
    });
    $("#menu").append(" ");
    var a = $("<a>");

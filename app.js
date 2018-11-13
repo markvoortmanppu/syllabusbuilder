@@ -7,6 +7,9 @@ var favicon = require("serve-favicon");
 var logger = require("morgan");
 var cookieParser = require("cookie-parser");
 var bodyParser = require("body-parser");
+var formidable = require("formidable");
+var PDFMerge = require("pdf-merge");
+
 var sylbuilder = require("./public/sylbuilder");
 var md5file = require("md5-file");
 var markdownpdf = require("markdown-pdf");
@@ -165,6 +168,20 @@ app.post("/set_schoology_credentials", async function(req, res, next) {
   }
 });
 
+function concatPDFs(pdf1, pdf2, cb) {
+  var outfile = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
+  if (!pdf2) {
+    cb(pdf1);
+  }
+  else {
+    PDFMerge([pdf1, pdf2], {
+      output: outfile
+    }).then(function() {
+      cb(outfile);
+    });
+  }
+}
+
 function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, cb) {
   var syllabus = null;
   for (var i = syllabidata.syllabi.length-1; i >= 0; i--) {
@@ -199,42 +216,46 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
   //fs.writeFile(tmpname, template, function(err) {
   markdownpdf().from.string(template).to(tmpname, function(err) {
-    if (err) {
-      cb({
-        error: err.toString()
-      });
-    }
-    else {
-      fs.stat(tmpname, function(err, stats) {
-        if (err) {
-          cb({
-            error: err.toString()
-          });
-        }
-        else {
-          md5file(tmpname, function(err, hash) {
-            if (err) {
-              cb({
-                error: err.toString()
-              });
-            }
-            else {
-              schlgy.init(credentials.consumerkey, credentials.consumersecret, function(instance) {
-                instance.uploadFile({
-                  fpath: tmpname,
-                  fname: "Syllabus" + syllabus.info.CourseCode + ".pdf",
-                  fsize: stats.size,
-                  mimetype: "application/pdf",
-                  md5: hash
-                }, function(data) {
-                  cb(data);
+    var pdfFileAppendix = syllabus.info.PdfFileAppendix;
+    var otherpdf = !pdfFileAppendix ? "" : "data/" + syllabidata.email + ":" + pdfFileAppendix.id + ":" + pdfFileAppendix.name;
+    concatPDFs(tmpname, otherpdf, function(outfile) {
+      if (err) {
+        cb({
+          error: err.toString()
+        });
+      }
+      else {
+        fs.stat(outfile, function(err, stats) {
+          if (err) {
+            cb({
+              error: err.toString()
+            });
+          }
+          else {
+            md5file(outfile, function(err, hash) {
+              if (err) {
+                cb({
+                  error: err.toString()
                 });
-              });
-            }
-          });
-        }
-      });
-    }
+              }
+              else {
+                schlgy.init(credentials.consumerkey, credentials.consumersecret, function(instance) {
+                  instance.uploadFile({
+                    fpath: outfile,
+                    fname: "Syllabus" + syllabus.info.CourseCode + ".pdf",
+                    fsize: stats.size,
+                    mimetype: "application/pdf",
+                    md5: hash
+                  }, function(data) {
+                    cb(data);
+                  });
+                });
+              }
+            });
+          }
+        });
+      }
+    });
   });
 }
 
@@ -275,6 +296,52 @@ app.get("/upload", async function(req, res, next) {
         });
       }
     });
+  }
+});
+
+app.post("/fileupload", async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  var userEmail = req.cookies.graph_user_email;
+  if (accessToken && userEmail) {
+    const userAdmin = req.cookies.graph_user_admin;
+    if (userAdmin && req.query.email) {
+      userEmail = req.query.email;
+    }
+    var form = new formidable.IncomingForm();
+    form.parse(req, function(err, fields, files) {
+      if (err) {
+        res.setHeader("Content-Type", "application/json");
+        res.send(JSON.stringify({
+          error: err
+        }));
+      }
+      else {
+        var id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        fs.rename(files.file.path, "data/" + userEmail + ":" + id + ":" + files.file.name, function(err) {
+          res.setHeader("Content-Type", "application/json");
+          res.send(JSON.stringify({
+            error: err,
+            id: id,
+            name: files.file.name
+          }));
+        });
+      }
+    });
+  }
+});
+
+app.get("/files/*", async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  var userEmail = req.cookies.graph_user_email;
+  if (accessToken && userEmail) {
+    const userAdmin = req.cookies.graph_user_admin;
+    if (userAdmin && req.query.email) {
+      userEmail = req.query.email;
+    }
+    var parts = req.url.split("?")[0].split("/");
+    var id = decodeURIComponent(parts[2]);
+    var name = decodeURIComponent(parts[3]);
+    res.sendFile(__dirname + "/data/" + userEmail + ":" + id + ":" + name);
   }
 });
 
