@@ -282,6 +282,10 @@
 
  function normalize(code) {
    code = code || "";
+   if (code.startsWith("MBA5 ")) {
+     // suppress the MBA5 XX duplicates
+     return "";
+   }
    return code.toUpperCase().replace(/ /g, "");
  }
  
@@ -294,7 +298,7 @@
        data.CourseCode = normalize(catalog[i].crs_cde);
        data.CourseName = catalog[i].crs_title + catalog[i].crs_title_2;
        data.Credits = catalog[i].dflt_credit_hrs;
-       var text = catalog[i].catalog_text;
+       var text = CATALOG[i].catalog_text.replace(/\r\n/, "").replace(/\r/, "").replace(/\n/, "");
        text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
        var endIndex = text.indexOf(postfix) >= 0 ? text.indexOf(postfix) : text.length;
        var desc = text.substr(0, endIndex).replace(/<br>/g, "\n").trim();
