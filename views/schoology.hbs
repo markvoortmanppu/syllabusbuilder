@@ -64,15 +64,17 @@
    menu.empty();
    content.empty();
    content.append("<b>Schoology Credentials</b><br>");
-   content.append("Click on <a href=\"https://pointpark.schoology.com/api\" target=\"_blank\">this</a> link and copy-paste the keys below (IMPORTANT: do not share with anyone!).<br>");
-   content.append("Consumer Key");
+   content.append("Click on <a href=\"https://pointpark.schoology.com/api\" target=\"_blank\">this</a> link and copy-paste the keys below (IMPORTANT: do not share with anyone!). You have to set this up only once.<br><br>");
+   content.append("<b>Consumer Key</b>");
    var consumerkey = $("<input>");
    content.append(consumerkey);
    consumerkey.addClass("form-control");
-   content.append("Consumer Secret");
+   content.append("<br>");
+   content.append("<b>Consumer Secret</b>");
    var consumersecret = $("<input>");
    content.append(consumersecret);
    consumersecret.addClass("form-control");
+   content.append("<br>");
    var a = $("<a>");
    $("#content").append(a);
    a.addClass("btn btn-outline-primary btn-sm");
@@ -111,27 +113,40 @@
    menu.empty();
    content.empty();
    content.append("<b>Available Courses</b><br>");
-   //content.append(JSON.stringify(data));
-   for (var i = 0; i < data.sections.section.length; i++) {
-     (function(i) {
-       var section = data.sections.section[i];
-       var parts = section.section_title.split(" ");
-       if (parts[0] !== "OAON" && parts[1] === "SP18") {
-         $("#content").append("<hr>");
-         var a = $("<a>");
-         content.append(a);
-         a.addClass("btn btn-outline-primary btn-sm");
-         a.attr("href", "javascript:");
-         a.click(function() {
-           selectSyllabus({
-             section: section
-           });
-         });
-         a.append(section.course_code + " " + section.course_title + " " + section.section_title);
-         content.append("<br>");
-       }
-     })(i);
+   if (!data.sections.section) {
+     content.append("<hr>");
+     content.append("None.");
    }
+   else {
+     for (var i = 0; i < data.sections.section.length; i++) {
+       (function(i) {
+         var section = data.sections.section[i];
+         var parts = section.section_title.split(" ");
+         if (parts[0] !== "OAON" && parts[1] === "SP18") {
+           $("#content").append("<hr>");
+           var a = $("<a>");
+           content.append(a);
+           a.addClass("btn btn-outline-primary btn-sm");
+           a.attr("href", "javascript:");
+           a.click(function() {
+             selectSyllabus({
+               section: section
+             });
+           });
+           a.append(section.course_code + " " + section.course_title + " " + parts[0]);
+           content.append("<br>");
+         }
+       })(i);
+     }
+   }
+ }
+ 
+ function sem2text(sem) {
+   return {
+     "SP18": "Spring 2019",
+     "ZU18": "Summer 2019",
+     "FA19": "Fall 2019",
+   }[sem];
  }
  
  function selectSyllabus(alldata) {
@@ -163,7 +178,7 @@
              CourseCode: alldata.section.course_code,
              CourseName: alldata.section.course_title,
              Section: alldata.section.section_title.split(" ")[0],
-             Semester: alldata.section.section_title.split(" ")[1]
+             Semester: sem2text(alldata.section.section_title.split(" ")[1])
            }
          };
          alldata.syllabi.push(alldata.syllabus);
@@ -342,53 +357,84 @@
        goedit(alldata);
      });
    });
-   $("#content").append("<b>Course Info</b><br>");
-   function addEntry(name, options, isDate) {
-     $("#content").append("<br>");
-     $("#content").append(name);
-     var input = !options ? $("<input>") : $("<select>");
-     $("#content").append(input);
-     input.addClass("form-control");
-     if (isDate) {
-       input.attr("type", "date");
-     }
-     if (options) {
-       for (var i = 0; i < options.length; i++) {
-         var option = $("<option>");
-         input.append(option);
-         option.attr("value", options[i].value);
-         option.append(options[i].label);
-       }
-     }
-     var property = name.replace(/ /g, "");
-     input.keyup(function() {
-       if (!alldata.syllabus.info) {
-         alldata.syllabus.info = {};
-       }
-       alldata.syllabus.info[property] = input.val();
-     });
-     input.change(function() {
-       if (!alldata.syllabus.info) {
-         alldata.syllabus.info = {};
-       }
-       alldata.syllabus.info[property] = input.val();
-     });
-     if (alldata.syllabus.info && alldata.syllabus.info[property]) {
-       if (alldata.syllabus.info[property].indexOf("/") >= 0) {
-         // TODO: remove this if statement
-         var oldDateStr = alldata.syllabus.info[property];
-         var parts = oldDateStr.split("/");
-         var newDateStr = parts[2] + "-" + parts[0] + "-" + parts[1];
-         alldata.syllabus.info[property] = newDateStr;
-       }
-       input.val(alldata.syllabus.info[property]);
-     }
-     if (options) {
-       input.change();
-     }
+   //$("#content").append("<b>Course Info</b><br>");
+   
+   $("#content").append("<b>Course Type</b>");
+   if (!alldata.syllabus.info.CourseType) {
+     alldata.syllabus.info.CourseType = "15 Week";
    }
-   addEntry("Date First Class", null, true);
-   $("#content").append("<br>Upload Appendix (PDFs only)");
+   var input = $("<select>");
+   $("#content").append(input);
+   input.addClass("form-control");
+   var options = ["15 Week", "Term I", "Term II"];
+   for (var i = 0; i < options.length; i++) {
+     var option = $("<option>");
+     input.append(option);
+     option.attr("value", options[i]);
+     option.append(options[i]);
+   }
+   input.change(function() {
+     alldata.syllabus.info.CourseType = $(this).val();
+   });
+   if (alldata.syllabus.info && alldata.syllabus.info.CourseType) {
+     input.val(alldata.syllabus.info.CourseType);
+   }
+   
+   $("#content").append("<br><b>Meeting Time (HH:MM AM/PM)</b>");
+   var input = $("<input>");
+   $("#content").append(input);
+   input.addClass("form-control");
+   input.attr("type", "time");
+   if (alldata.syllabus.info["ClassMeetingTime"]) {
+     var parts = alldata.syllabus.info["ClassMeetingTime"].split(" ");
+     var hours = Number(parts[0].split(":")[0]);
+     var minutes = parts[0].split(":")[1];
+     if (parts[1] === "PM") {
+       hours += 12;
+     }
+     input.val(hours + ":" + minutes);
+   }
+   input.change(function() {
+     var parts = $(this).val().split(":");
+     var hours = Number(parts[0]);
+     var timestr = (hours < 12 ? hours : hours-12) + ":" + parts[1] + " " + (hours < 12 ? "AM" : "PM");
+     alldata.syllabus.info["ClassMeetingTime"] = timestr;
+   });
+   
+   $("#content").append("<br><b>Meeting Days</b>");
+   var days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+   var selecteddays = {};
+   for (var i = 0; i < days.length; i++) {
+     (function(i) {
+       var formcheck = $("<div>");
+       $("#content").append(formcheck);
+       formcheck.addClass("form-check");
+       var input = $("<input>");
+       formcheck.append(input);
+       input.addClass("form-check-input");
+       input.attr("type", "checkbox");
+       formcheck.append(" " + days[i]);
+       if (alldata.syllabus.info["ClassMeetingDays"] && alldata.syllabus.info["ClassMeetingDays"].indexOf(days[i]) >= 0) {
+         input.prop("checked", true);
+         selecteddays[days[i]] = true;
+       }
+       input.change(function() {
+         selecteddays[days[i]] = input.prop("checked");
+         var result = "";
+         for (var j = 0; j < days.length; j++) {
+           if (selecteddays[days[j]]) {
+             if (result) {
+               result += ", ";
+             }
+             result += days[j];
+           }
+         }
+         alldata.syllabus.info["ClassMeetingDays"] = result;
+       });
+     })(i);
+   }
+   
+   $("#content").append("<br><b>Upload Appendix (PDFs only)</b>");
    var status = $("<div>");
    $("#content").append(status);
    var showStatus = function() {
@@ -535,7 +581,7 @@
          }
          else {
            $("#content").empty();
-           $("#content").append("Syllabus was uploaded!");
+           $("#content").append("Syllabus was uploaded to Schoology!<br>Note that it has been added at the end of the main course folder, so please make sure to move it to the appropriate location.");
          }
        }).fail(fail);
      });

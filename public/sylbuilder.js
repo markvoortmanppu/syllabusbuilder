@@ -19,8 +19,8 @@
     return false;
   }
   
-  function isSpringBreakWeek(date, startdate) {
-    if (date.getMonth() >= 5) {
+  function isSpringBreakWeek(date, startdate, coursetype) {
+    if (date.getMonth() >= 5 || coursetype === "Term II") {
       return false;
     }
     var diff = date.getTime() - startdate.getTime();
@@ -60,6 +60,18 @@
     return date;
   }
   
+  function getFirstWeek(info) {
+    if (info.Semester === "Spring 2019") {
+      if (info.CourseType === "15 Week" || info.CourseType === "Term I") {
+        return new Date(2019, 0, 7);
+      }
+      if (info.CourseType === "Term II") {
+        return new Date(2019, 2, 4);
+      }
+    }
+    return null;
+  }
+  
   exports.prepare = function(data, alldata) {
     var template = null;
     for (var i = 0; i < data.templates.length; i++) {
@@ -84,50 +96,98 @@
       }
     }
     // extend template with schedule at the end
-    if (alldata.syllabus.info.DateFirstClass) {
-      if (template[template.length-2] !== "\n" && template[template.length-1] !== "\n") {
-        template += "\n\n";
+    if (template[template.length-2] !== "\n" && template[template.length-1] !== "\n") {
+      template += "\n\n";
+    }
+    else if (template[template.length-1] !== "\n") {
+      template += "\n";
+    }
+    var date = getFirstWeek(alldata.syllabus.info);
+    var duration = 15;
+    if (alldata.syllabus.info.CourseType === "Term I" || alldata.syllabus.info.CourseType === "Term II") {
+      duration = 8;
+    }
+    var alldays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    var days = [];
+    for (var i = 0; i < alldays.length; i++) {
+      if (alldata.syllabus.info.ClassMeetingDays && alldata.syllabus.info.ClassMeetingDays.indexOf(alldays[i]) >= 0) {
+        days.push(alldays[i]);
       }
-      else if (template[template.length-1] !== "\n") {
-        template += "\n";
-      }
-      var datefirstclass = alldata.syllabus.info.DateFirstClass;
-      var date = newDate(datefirstclass);
-      var duration = 15;
-      if (alldata.syllabus.info.CourseDuration === "8 Weeks") {
-        duration = 8;
-      }
-      var cnt = 0;
-      var thanksgiving = false;
-      while (cnt < duration - (duration === 8 && thanksgiving ? 1 : 0)) {
-        var datestr = (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear();
+    }
+    var mapping = {
+      "Monday": 0,
+      "Tuesday": 1,
+      "Wednesday": 2,
+      "Thursday": 3,
+      "Friday": 4,
+      "Saturday": 5,
+      "Sunday": 6
+    };
+    var cnt = 0;
+    var thanksgiving = false;
+    var springbreak = false;
+    while (cnt < duration - (duration === 8 && (thanksgiving ? 1 : 0 || springbreak ? 1 : 0))) {
+      for (var i = 0; i < days.length; i++) {
+        var weekpart = "";
+        if (days.length > 1) {
+          if (i === 0) {
+            weekpart = "a";
+          }
+          else if (i === 1) {
+            weekpart = "b";
+          }
+          else if (i === 2) {
+            weekpart = "c";
+          }
+          else if (i === 3) {
+            weekpart = "d";
+          }
+          else if (i === 4) {
+            weekpart = "e";
+          }
+          else if (i === 5) {
+            weekpart = "f";
+          }
+          else if (i === 6) {
+            weekpart = "g";
+          }
+          else if (i === 7) {
+            weekpart = "h";
+          }
+        }
+        var tmpdate = new Date(date.getTime());
+        tmpdate.setDate(tmpdate.getDate() + mapping[days[i]]);
+        var datestr = (tmpdate.getMonth()+1)+"/"+tmpdate.getDate()+"/"+tmpdate.getFullYear();
         if (isThanksgivingWeek(date)) {
           // skip the thanksgiving week
           template += "### Thanksgiving Break (" + datestr + ")";
           template += "\n";
           thanksgiving = true;
         }
-        else if (isSpringBreakWeek(date, newDate(datefirstclass))) {
+        else if (isSpringBreakWeek(tmpdate, getFirstWeek(alldata.syllabus.info), alldata.syllabus.info.CourseType)) {
           // skip the spring break week
           template += "### Spring Break (" + datestr + ")";
           template += "\n";
+          springbreak = true;
         }
         else {
-          cnt++;
-          var regexp = new RegExp("\{{Week"+cnt+"Date}}", "g");
-          template = template.replace(regexp, (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear());
-          template += "### Week " + cnt + ": \{{Week" + cnt + "Title}} (" + datestr + ")\n";
-          if (isLaborDay(date)) {
+          if (i === 0) {
+            cnt++;
+          }
+          var regexp = new RegExp("\{{Week"+cnt+weekpart+"Date}}", "g");
+          template = template.replace(regexp, (tmpdate.getMonth()+1)+"/"+tmpdate.getDate()+"/"+tmpdate.getFullYear());
+          template += "### Week " + cnt + weekpart + ": \{{Week" + cnt + weekpart + "Title}} (" + datestr + ")\n";
+          if (isLaborDay(tmpdate)) {
             template += "**NOTE: CLASS DOES NOT MEET DUE TO LABOR DAY**\n";
           }
-          if (isMLKDay(date)) {
+          if (isMLKDay(tmpdate)) {
             template += "**NOTE: CLASS DOES NOT MEET DUE TO MARTIN LUTHER KING DAY**\n";
           }
-          template += "\{{Week" + cnt + "Description}}\n"
+          template += "\{{Week" + cnt + weekpart + "Description}}\n"
           template += "\n";
         }
-        date = new Date(date.getFullYear(), date.getMonth(), date.getDate()+7);
       }
+      date = new Date(date.getFullYear(), date.getMonth(), date.getDate()+7);
     }
     if (!alldata.syllabus.fields) {
       alldata.syllabus.fields = {};

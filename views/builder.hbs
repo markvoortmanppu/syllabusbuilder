@@ -233,18 +233,18 @@
          label: "8 Weeks"
        }];
        addEntry("Course Duration", options);
-       if (syllabus.info.Semester === "Spring 2019") {
-         syllabus.info.Semester = "SP19";
+       if (syllabus.info.Semester === "SP18") {
+         syllabus.info.Semester = "Spring 2019";
        }
-       else if (syllabus.info.Semester === "Fall 2018") {
-         syllabus.info.Semester = "FA18";
+       else if (syllabus.info.Semester === "FA18") {
+         syllabus.info.Semester = "Fall 2018";
        }
        var options = [{
-         value: "SP19",
-         label: "SP19"
+         value: "Spring 2019",
+         label: "Spring 2019"
        }, {
-         value: "FA18",
-         label: "FA18"
+         value: "Fall 2018",
+         label: "Fall 2018"
        }];
        addEntry("Semester", options);
        addEntry("Date First Class", null, true);
