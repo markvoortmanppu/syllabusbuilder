@@ -380,13 +380,13 @@
      input.val(alldata.syllabus.info.CourseType);
    }
    
-   $("#content").append("<br><b>Meeting Time (HH:MM AM/PM)</b>");
+   $("#content").append("<br><b>Meeting Time Start (HH:MM AM/PM)</b>");
    var input = $("<input>");
    $("#content").append(input);
    input.addClass("form-control");
    input.attr("type", "time");
-   if (alldata.syllabus.info["ClassMeetingTime"]) {
-     var parts = alldata.syllabus.info["ClassMeetingTime"].split(" ");
+   if (alldata.syllabus.info["ClassMeetingTimeStart"]) {
+     var parts = alldata.syllabus.info["ClassMeetingTimeStart"].split(" ");
      var hours = Number(parts[0].split(":")[0]);
      var minutes = parts[0].split(":")[1];
      if (parts[1] === "PM") {
@@ -398,7 +398,28 @@
      var parts = $(this).val().split(":");
      var hours = Number(parts[0]);
      var timestr = (hours < 12 ? hours : hours-12) + ":" + parts[1] + " " + (hours < 12 ? "AM" : "PM");
-     alldata.syllabus.info["ClassMeetingTime"] = timestr;
+     alldata.syllabus.info["ClassMeetingTimeStart"] = timestr;
+   });
+   
+   $("#content").append("<br><b>Meeting Time End (HH:MM AM/PM)</b>");
+   var input = $("<input>");
+   $("#content").append(input);
+   input.addClass("form-control");
+   input.attr("type", "time");
+   if (alldata.syllabus.info["ClassMeetingTimeEnd"]) {
+     var parts = alldata.syllabus.info["ClassMeetingTimeEnd"].split(" ");
+     var hours = Number(parts[0].split(":")[0]);
+     var minutes = parts[0].split(":")[1];
+     if (parts[1] === "PM") {
+       hours += 12;
+     }
+     input.val(hours + ":" + minutes);
+   }
+   input.change(function() {
+     var parts = $(this).val().split(":");
+     var hours = Number(parts[0]);
+     var timestr = (hours < 12 ? hours : hours-12) + ":" + parts[1] + " " + (hours < 12 ? "AM" : "PM");
+     alldata.syllabus.info["ClassMeetingTimeEnd"] = timestr;
    });
    
    $("#content").append("<br><b>Meeting Days</b>");
@@ -434,7 +455,8 @@
      })(i);
    }
    
-   $("#content").append("<br><b>Upload Appendix (PDF only)</b>");
+   $("#content").append("<br><b>Upload Appendix (PDF only)</b><br>");
+   $("#content").append("If you upload a PDF file below it will be appended to the end of your syllabus.<br>Note that a lot of software, such as Microsoft Office, supports saving to PDF directly.<br>Only one PDF is supported, so if you have multiple files you should combine them into one first.<br>");
    var status = $("<div>");
    $("#content").append(status);
    var showStatus = function() {
