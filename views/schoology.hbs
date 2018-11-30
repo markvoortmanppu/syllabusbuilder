@@ -164,7 +164,7 @@
      else {
        alldata.email = data.email;
        alldata.info = data.info;
-       alldata.syllabi = data.syllabi;
+       alldata.syllabi = data.syllabi || [];
        for (var i = 0; i < alldata.syllabi.length; i++) {
          if (alldata.syllabi[i].info && alldata.syllabi[i].info.SectionID === alldata.section.id) {
            alldata.syllabus = alldata.syllabi[i];
