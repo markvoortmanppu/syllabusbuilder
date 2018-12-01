@@ -144,11 +144,17 @@ app.get("/load_schoology_data", async function(req, res, next) {
       }
       else {
         schlgy.init(tmp.credentials.consumerkey, tmp.credentials.consumersecret, function(instance) {
-          instance.getSections(function(sections) {
-            res.send({
-              sections: sections
+          if (!instance || !instance.getSections) {
+            tmp.notInitialized = true;
+            res.send(tmp);
+          }
+          else {
+            instance.getSections(function(sections) {
+              res.send({
+                sections: sections
+              });
             });
-          });
+          }
         });
       }
     });
