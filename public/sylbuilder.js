@@ -102,10 +102,7 @@
     else if (template[template.length-1] !== "\n") {
       template += "\n";
     }
-    if (alldata.syllabus.info.DoNotGenerateSchedule) {
-      template += "None.";
-    }
-    else {
+    if (!alldata.syllabus.info.DoNotGenerateSchedule) {
       var date = getFirstWeek(alldata.syllabus.info);
       var duration = 15;
       if (alldata.syllabus.info.CourseType === "Term I" || alldata.syllabus.info.CourseType === "Term II") {
