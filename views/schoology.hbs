@@ -10,6 +10,7 @@
  function save(alldata, cb) {
    var tmpdata = {
      email: alldata.email,
+     name: alldata.name,
      info: alldata.info,
      syllabi: alldata.syllabi
    };
@@ -163,6 +164,7 @@
      }
      else {
        alldata.email = data.email;
+       alldata.name = data.name;
        alldata.info = data.info;
        alldata.syllabi = data.syllabi || [];
        for (var i = 0; i < alldata.syllabi.length; i++) {
@@ -174,6 +176,7 @@
          alldata.syllabus = {
            info: {
              Email: alldata.email,
+             NameReversed: alldata.name,
              SectionID: alldata.section.id,
              CourseCode: alldata.section.course_code,
              CourseName: alldata.section.course_title,
@@ -207,6 +210,7 @@
    a.append("Next");
    a.click(function() {
      alldata.info.Email = alldata.email;
+     alldata.info.NameReversed = alldata.name;
      save(alldata, function() {
        findtemplate(alldata);
      });
@@ -454,6 +458,24 @@
        });
      })(i);
    }
+   
+   $("#content").append("<br><b>Schedule</b>");
+   (function() {
+     var formcheck = $("<div>");
+     $("#content").append(formcheck);
+     formcheck.addClass("form-check");
+     var input = $("<input>");
+     formcheck.append(input);
+     input.addClass("form-check-input");
+     input.attr("type", "checkbox");
+     formcheck.append(" Do not automatically generate class schedule (check if you will attach your own PDF schedule)");
+     if (alldata.syllabus.info["DoNotGenerateSchedule"]) {
+       input.prop("checked", true);
+     }
+     input.change(function() {
+       alldata.syllabus.info["DoNotGenerateSchedule"] = input.prop("checked");
+     });
+   })();
    
    $("#content").append("<br><b>Upload Appendix (PDF only)</b><br>");
    $("#content").append("If you upload a PDF file below it will be appended to the end of your syllabus.<br>Note that a lot of software, such as Microsoft Office, supports saving to PDF directly.<br>Only one PDF is supported, so if you have multiple files you should combine them into one first.<br>");

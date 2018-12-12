@@ -99,6 +99,7 @@ app.post("/save_data", async function(req, res, next) {
 async function loadData(req, res, cb) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const userEmail = req.cookies.graph_user_email;
+  const userName = req.cookies.graph_user_name;
   if (accessToken && userEmail) {
     res.setHeader("Content-Type", "application/json");
     fs.readFile("data/" + userEmail + ".json", "utf8", function(err, datastr) {
@@ -108,6 +109,9 @@ async function loadData(req, res, cb) {
       }
       if (!tmp.email) {
         tmp.email = userEmail;
+      }
+      if (!tmp.name) {
+        tmp.name = userName;
       }
       cb(tmp);
     });
@@ -219,9 +223,14 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
     template = template.replace(regexp, entry.value?entry.value:"");
   }
 
+  var fname = ("2019_S_" + alldata.syllabus.info.CourseCode + "_" + alldata.syllabus.info.Section + "_" + alldata.info.NameReversed + ".pdf").replace(/,/g, "").replace(/ /g, "_");
+
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
   //fs.writeFile(tmpname, template, function(err) {
-  markdownpdf().from.string(template).to(tmpname, function(err) {
+  markdownpdf({
+    cssPath: __dirname + "/public/bootstrap.min.css",
+    paperFormat: "Letter"
+  }).from.string(template).to(tmpname, function(err) {
     var pdfFileAppendix = syllabus.info.PdfFileAppendix;
     var otherpdf = !pdfFileAppendix ? "" : "data/" + syllabidata.email + ":" + pdfFileAppendix.id + ":" + pdfFileAppendix.name;
     concatPDFs(tmpname, otherpdf, function(outfile) {
@@ -248,7 +257,7 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
                 schlgy.init(credentials.consumerkey, credentials.consumersecret, function(instance) {
                   instance.uploadFile({
                     fpath: outfile,
-                    fname: "Syllabus" + syllabus.info.CourseCode + ".pdf",
+                    fname: fname,
                     fsize: stats.size,
                     mimetype: "application/pdf",
                     md5: hash
