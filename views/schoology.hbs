@@ -42,7 +42,7 @@
    content.append("Please wait ...");
    $.ajax({
      type: "GET",
-     url: "/load_schoology_data"
+     url: "/load_schoology_data?" + Date.now()
    }).done(function(data) {
      content.empty();
      if (data.error) {
@@ -157,7 +157,7 @@
    content.empty();
    $.ajax({
      type: "GET",
-     url: "/load_data"
+     url: "/load_data?" + Date.now()
    }).done(function(data) {
      if (data.error) {
        alert(data.error);
@@ -245,7 +245,7 @@
  function findtemplate(alldata) {
    $.ajax({
      type: "GET",
-     url: "/load_templates"
+     url: "/load_templates?" + Date.now()
    }).done(function(data) {
      if (data.error) {
        alert(data.error);
@@ -280,7 +280,7 @@
    else {
      $.ajax({
        type: "GET",
-       url: "/load_catalog_data"
+       url: "/load_catalog_data?" + Date.now()
      }).done(function(data) {
        CATALOG = data;
        cb(CATALOG);
@@ -569,7 +569,7 @@
  function goedit(alldata) {
    $.ajax({
      type: "GET",
-     url: "/load_templates"
+     url: "/load_templates?" + Date.now()
    }).done(function(data) {
      if (data.error) {
        alert(data.error);
