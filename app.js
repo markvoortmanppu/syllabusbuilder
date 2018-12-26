@@ -228,7 +228,7 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
   //fs.writeFile(tmpname, template, function(err) {
   markdownpdf({
-    cssPath: __dirname + "/public/bootstrap.min.css",
+    cssPath: __dirname + "/public/bootstrap_pdf.min.css",
     paperFormat: "Letter"
   }).from.string(template).to(tmpname, function(err) {
     var pdfFileAppendix = syllabus.info.PdfFileAppendix;
