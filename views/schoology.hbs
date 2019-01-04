@@ -393,15 +393,19 @@
      var parts = alldata.syllabus.info["ClassMeetingTimeStart"].split(" ");
      var hours = Number(parts[0].split(":")[0]);
      var minutes = parts[0].split(":")[1];
-     if (parts[1] === "PM") {
+     if (parts[1] === "PM" && hours < 12) {
        hours += 12;
      }
-     input.val(hours + ":" + minutes);
+     var result = hours + ":" + minutes;
+     if (result.indexOf(":") === 1) {
+       result = "0" + result;
+     }
+     input.val(result);
    }
    input.change(function() {
      var parts = $(this).val().split(":");
      var hours = Number(parts[0]);
-     var timestr = (hours < 12 ? hours : hours-12) + ":" + parts[1] + " " + (hours < 12 ? "AM" : "PM");
+     var timestr = (hours <= 12 ? hours : hours-12) + ":" + parts[1] + " " + (hours < 12 ? "AM" : "PM");
      alldata.syllabus.info["ClassMeetingTimeStart"] = timestr;
    });
    
@@ -414,15 +418,19 @@
      var parts = alldata.syllabus.info["ClassMeetingTimeEnd"].split(" ");
      var hours = Number(parts[0].split(":")[0]);
      var minutes = parts[0].split(":")[1];
-     if (parts[1] === "PM") {
+     if (parts[1] === "PM" && hours < 12) {
        hours += 12;
      }
-     input.val(hours + ":" + minutes);
+     var result = hours + ":" + minutes;
+     if (result.indexOf(":") === 1) {
+       result = "0" + result;
+     }
+     input.val(result);
    }
    input.change(function() {
      var parts = $(this).val().split(":");
      var hours = Number(parts[0]);
-     var timestr = (hours < 12 ? hours : hours-12) + ":" + parts[1] + " " + (hours < 12 ? "AM" : "PM");
+     var timestr = (hours <= 12 ? hours : hours-12) + ":" + parts[1] + " " + (hours < 12 ? "AM" : "PM");
      alldata.syllabus.info["ClassMeetingTimeEnd"] = timestr;
    });
    
