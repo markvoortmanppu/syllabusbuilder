@@ -172,13 +172,25 @@
            alldata.syllabus = alldata.syllabi[i];
          }
        }
-       if (!alldata.syllabus) {
+       if (alldata.syllabus) {
+         // NOTE: bugfix for existing syllabi (to be deleted)
+         var course_code = alldata.syllabus.info.CourseCode;
+         if (course_code && course_code.indexOf("-") >= 0) {
+           course_code = course_code.substring(0, course_code.indexOf("-"));
+           alldata.syllabus.info.CourseCode = course_code;
+         }
+       }
+       else {
+         var course_code = alldata.section.course_code;
+         if (course_code && course_code.indexOf("-") >= 0) {
+           course_code = course_code.substring(0, course_code.indexOf("-"));
+         }
          alldata.syllabus = {
            info: {
              Email: alldata.email,
              NameReversed: alldata.name,
              SectionID: alldata.section.id,
-             CourseCode: alldata.section.course_code,
+             CourseCode: course_code,
              CourseName: alldata.section.course_title,
              Section: alldata.section.section_title.split(" ")[0],
              Semester: sem2text(alldata.section.section_title.split(" ")[1])
