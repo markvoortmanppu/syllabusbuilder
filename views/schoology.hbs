@@ -485,6 +485,18 @@
      })(i);
    }
    
+   $("#content").append("<br><b>Meeting Location</b>");
+   var input = $("<input>");
+   $("#content").append(input);
+   input.addClass("form-control");
+   input.attr("type", "input");
+   if (alldata.syllabus.info["ClassMeetingLocation"]) {
+     input.val(alldata.syllabus.info["ClassMeetingLocation"]);
+   }
+   input.change(function() {
+     alldata.syllabus.info["ClassMeetingLocation"] = $(this).val();
+   });
+   
    $("#content").append("<br><b>Schedule</b>");
    (function() {
      var formcheck = $("<div>");
