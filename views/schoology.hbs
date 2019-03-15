@@ -119,26 +119,32 @@
      content.append("None.");
    }
    else {
-     for (var i = 0; i < data.sections.section.length; i++) {
-       (function(i) {
-         var section = data.sections.section[i];
-         var parts = section.section_title.split(" ");
-         if (parts[0] !== "OAON" && parts[1] === "SP18") {
-           $("#content").append("<hr>");
-           var a = $("<a>");
-           content.append(a);
-           a.addClass("btn btn-outline-primary btn-sm");
-           a.attr("href", "javascript:");
-           a.click(function() {
-             selectSyllabus({
-               section: section
+     function displaySemester(longname, shortname) {
+       content.append("<hr>");
+       content.append("<b>" + longname + "</b><br>");
+       for (var i = 0; i < data.sections.section.length; i++) {
+         (function(i) {
+           var section = data.sections.section[i];
+           var parts = section.section_title.split(" ");
+           if (parts[0] !== "OAON" && parts[1] === shortname) {
+             content.append("<hr>");
+             var a = $("<a>");
+             content.append(a);
+             a.addClass("btn btn-outline-primary btn-sm");
+             a.attr("href", "javascript:");
+             a.click(function() {
+               selectSyllabus({
+                 section: section
+               });
              });
-           });
-           a.append(section.course_code + " " + section.course_title + " " + parts[0]);
-           content.append("<br>");
-         }
-       })(i);
+             a.append(section.course_code + " " + section.course_title + " " + parts[0]);
+             content.append("<br>");
+           }
+         })(i);
+       }
      }
+     displaySemester("Summer 2019", "ZU18");
+     displaySemester("Spring 2019", "SP18");
    }
  }
  
@@ -221,6 +227,8 @@
    a.attr("href", "javascript:");
    a.append("Next");
    a.click(function() {
+     $("#content").empty();
+     $("#content").append("Please wait ...");
      alldata.info.Email = alldata.email;
      alldata.info.NameReversed = alldata.name;
      save(alldata, function() {
@@ -369,6 +377,8 @@
    a.attr("href", "javascript:");
    a.append("Next");
    a.click(function() {
+     $("#content").empty();
+     $("#content").append("Please wait ...");
      save(alldata, function() {
        goedit(alldata);
      });
@@ -382,7 +392,15 @@
    var input = $("<select>");
    $("#content").append(input);
    input.addClass("form-control");
-   var options = ["15 Week", "Term I", "Term II"];
+   var options = [];
+   if (alldata.syllabus.info.Semester.startsWith("Summer")) {
+     options.push("12 Week");
+   }
+   else {
+     options.push("15 Week");
+   }
+   options.push("Term I");
+   options.push("Term II");
    for (var i = 0; i < options.length; i++) {
      var option = $("<option>");
      input.append(option);
