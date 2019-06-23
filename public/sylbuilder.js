@@ -88,11 +88,14 @@
       }
     }
     else if (info.Semester === "Summer 2019") {
-      if (info.CourseType === "12 Week" || info.CourseType === "Term I") {
+      if (info.CourseType === "12 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
         return new Date(2019, 4, 6);
       }
       if (info.CourseType === "Term II") {
         return new Date(2019, 5, 17);
+      }
+      if (info.CourseType === "Evening Term II") {
+        return new Date(2019, 6, 1);
       }
     }
     return null;
@@ -135,6 +138,10 @@
         duration = 12;
       }
       else if (alldata.syllabus.info.CourseType === "Term I" || alldata.syllabus.info.CourseType === "Term II") {
+        // this should really be 6 weeks but not changing it right now
+        duration = 8;
+      }
+      else if (alldata.syllabus.info.CourseType === "Evening Term I" || alldata.syllabus.info.CourseType === "Evening Term II") {
         duration = 8;
       }
       var alldays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -158,7 +165,15 @@
       var springbreak = false;
       var minusduration = 0;
       if (alldata.syllabus.info.Semester.startsWith("Summer") && duration === 8) {
-        if (days.indexOf("Monday") >= 0 && days.length >= 2) {
+        if (alldata.syllabus.info.CourseType.startsWith("Evening")) {
+            // do nothing
+            // except subtract one week when it is term i and the class meets on monday
+            if (alldata.syllabus.info.CourseType.endsWith("Term I") && days.indexOf("Monday") >= 0) {
+              minusduration = 1;
+            }
+            // everything below is a hack to change summer i/ii to 6 weeks and start at the right time
+        }
+        else if (days.indexOf("Monday") >= 0 && days.length >= 2) {
           minusduration = 1;
         }
         else {
