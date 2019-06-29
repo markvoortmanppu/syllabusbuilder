@@ -131,7 +131,7 @@
     else if (template[template.length-1] !== "\n") {
       template += "\n";
     }
-    if (!alldata.syllabus.info.DoNotGenerateSchedule) {
+    if (!alldata.syllabus.info.DoNotGenerateSchedule && getFirstWeek(alldata.syllabus.info)) {
       var date = getFirstWeek(alldata.syllabus.info);
       var duration = 15;
       if (alldata.syllabus.info.CourseType === "12 Week") {
