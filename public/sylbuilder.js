@@ -98,6 +98,14 @@
         return new Date(2019, 6, 1);
       }
     }
+    else if (info.Semester === "Fall 2019") {
+      if (info.CourseType === "15 Week" || info.CourseType === "Term I") {
+        return new Date(2019, 7, 26);
+      }
+      if (info.CourseType === "Term II") {
+        return new Date(2019, 9, 21);
+      }
+    }
     return null;
   }
   
