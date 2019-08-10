@@ -645,7 +645,12 @@
    }).fail(fail);
  }
  
+ var currentidx = null;
  function edit(alldata, origtemplate, data, fields, idx) {
+   if (idx === currentidx) {
+     return;
+   }
+   currentidx = idx;
    $("#menu").empty();
    $("#content").empty();
    $("#content").append('<div id="buttons"></div><div id="output"></div>');
