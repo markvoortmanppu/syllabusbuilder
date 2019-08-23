@@ -297,13 +297,20 @@ app.get("/upload", async function(req, res, next) {
               }
               else {
                 schlgy.init(tmp.credentials.consumerkey, tmp.credentials.consumersecret, function(instance) {
-                  instance.addDocumentFile({
-                    sectionid: req.query.section_id,
-                    title: "Syllabus",
-                    fileid: data.fileid
-                  }, function() {
-                    res.send({});
-                  });
+                  if (!instance || !instance.addDocumentFile) {
+                    res.send({
+                      error: "File upload failed: could not obtain Schoology session."
+                    });
+                  }
+                  else {
+                    instance.addDocumentFile({
+                      sectionid: req.query.section_id,
+                      title: "Syllabus",
+                      fileid: data.fileid
+                    }, function() {
+                      res.send({});
+                    });
+                  }
                 });
               }
             });
