@@ -229,8 +229,8 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
   if (semester === "Fall") {
     semester = "F";
   }
-  else if (semester === "Fall") {
-    semester = "F";
+  else if (semester === "Spring") {
+    semester = "S";
   }
   else if (semester === "Summer") {
     semester = "Z";

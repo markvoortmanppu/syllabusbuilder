@@ -104,7 +104,19 @@ function createAndUploadPdf(templatedata, syllabidata, sectionid, cb) {
     template = template.replace(regexp, entry.value?entry.value:"");
   }
 
-  var fname = ("2019_S_" + alldata.syllabus.info.CourseCode + "_" + alldata.syllabus.info.Section + "_" + alldata.info.NameReversed + ".pdf").replace(/,/g, "").replace(/ /g, "_");
+  var parts = alldata.syllabus.info.Semester.split(" ");
+  var semester = parts[0];
+  var year = parts[1];
+  if (semester === "Fall") {
+    semester = "F";
+  }
+  else if (semester === "Spring") {
+    semester = "S";
+  }
+  else if (semester === "Summer") {
+    semester = "Z";
+  }
+  var fname = (year + "_" + semester + "_" + alldata.syllabus.info.CourseCode + "_" + alldata.syllabus.info.Section + "_" + alldata.info.NameReversed + ".pdf").replace(/,/g, "").replace(/ /g, "_");
 
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
   //fs.writeFile(tmpname, template, function(err) {
