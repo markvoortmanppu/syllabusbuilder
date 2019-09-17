@@ -195,7 +195,7 @@ function concatPDFs(pdf1, pdf2, cb) {
 function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, cb) {
   var syllabus = null;
   for (var i = syllabidata.syllabi.length-1; i >= 0; i--) {
-    if (syllabidata.syllabi[i].info.SectionID === sectionid) {
+    if (syllabidata.syllabi[i].info && syllabidata.syllabi[i].info.SectionID === sectionid) {
       syllabus = syllabidata.syllabi[i];
     }
   }
