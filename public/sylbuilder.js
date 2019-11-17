@@ -106,6 +106,14 @@
         return new Date(2019, 9, 21);
       }
     }
+    else if (info.Semester === "Spring 2020") {
+      if (info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2020, 0, 6);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2020, 2, 2);
+      }
+    }
     return null;
   }
   
