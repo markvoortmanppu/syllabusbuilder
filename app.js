@@ -22,11 +22,12 @@ var authorize = require("./routes/authorize");
 var builder = require("./routes/builder");
 var courses = require("./routes/courses");
 var schoology = require("./routes/schoology");
+var feedback = require("./routes/feedback");
 var templates = require("./routes/templates");
 
 var authHelper = require("./helpers/auth");
-
 var schlgy = require("./schoology");
+var nodemailer = require("nodemailer");
 
 var app = express();
 
@@ -47,6 +48,7 @@ app.use("/authorize", authorize);
 app.use("/builder", builder);
 app.use("/courses", courses);
 app.use("/schoology", schoology);
+app.use("/feedback", feedback);
 app.use("/templates", templates);
 
 app.post("/save_templates", async function(req, res, next) {
@@ -376,6 +378,32 @@ app.get("/files/*", async function(req, res, next) {
     var id = decodeURIComponent(parts[2]);
     var name = decodeURIComponent(parts[3]);
     res.sendFile(__dirname + "/data/" + userEmail + ":" + id + ":" + name);
+  }
+});
+
+// feedback form
+app.post("/feedback", async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  var userEmail = req.cookies.graph_user_email;
+  if (accessToken && userEmail) {
+    var transporter = nodemailer.createTransport({
+      host: "localhost",
+      port: 25,
+      ignoreTLS: true
+    });
+    var data = JSON.parse(req.body.data);
+    console.log(data);
+    transporter.sendMail({
+      from: "web@web.it.pointpark.edu",
+      replyTo: userEmail,
+      to: "mvoortman@pointpark.edu",
+      subject: "Feedback for syllabus builder",
+      text: data.text
+    }, function(err, info) {
+      res.send(JSON.stringify({
+        error: err
+      }));
+    });
   }
 });
 

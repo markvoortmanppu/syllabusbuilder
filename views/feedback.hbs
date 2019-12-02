@@ -1,0 +1,34 @@
+<div>
+  <h2 id="header">Feedback</h2>
+  <hr>
+  Please use the text area below and click on the submit button.<br>
+  Feedback is very much appreciated!<br>
+  <textarea id="output" class="form-control" style="height: 300px;"></textarea>
+  <a id="feedbackbtn" href="javascript:" class="btn btn-primary btn-sm">Submit</a>
+</div>
+
+<script>
+ window.onload = function() {
+   $("#feedbackbtn").click(function() {
+     $.ajax({
+       type: "POST",
+       url: "/feedback",
+       data: {
+         data: JSON.stringify({
+           text: $("#output").val()
+         })
+       }
+     }).done(function(data) {
+       if (data.error) {
+         console.log(JSON.stringify(data.error));
+         alert(JSON.stringify(data.error));
+       }
+       else {
+         $("#output").val("");
+         alert("Form Submitted: Thank You!");
+       }
+     }).fail(fail);
+   });
+ };
+ 
+</script>
