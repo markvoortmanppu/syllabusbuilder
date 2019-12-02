@@ -278,6 +278,10 @@
               if (isFourthOfJuly(tmpdate)) {
                 template += "**NOTE: CLASS DOES NOT MEET DUE TO FOURTH OF JULY**\n";
               }
+              if (cnt === 15) {
+                template += "**NOTE: FOR DAY CLASSES PLEASE CHECK THE FINAL EXAM SCHEDULE**\n";
+                template += "https://www.pointpark.edu/About/AdminDepts/RegistrarsOffice/StudentResources/FinalExamsSchedule\n";
+              }
               template += "\{{Week" + cnt + weekpart + "Description}}\n"
               template += "\n";
             }
