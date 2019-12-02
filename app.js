@@ -392,7 +392,9 @@ app.post("/feedback", async function(req, res, next) {
       ignoreTLS: true
     });
     var data = JSON.parse(req.body.data);
-    console.log(data);
+    console.log("---FEEDBACK---");
+    console.log(userEmail);
+    console.log(data.text);
     transporter.sendMail({
       from: "web@web.it.pointpark.edu",
       replyTo: userEmail,
