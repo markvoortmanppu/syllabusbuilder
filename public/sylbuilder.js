@@ -43,7 +43,7 @@
   }
   
   function isMLKDay(date) {
-    if (date.getMonth() === 0 && date.getDay() === 1 && date.getDate() >= 21 && date.getDate() < 28) {
+    if (date.getMonth() === 0 && date.getDay() === 1 && date.getDate() >= 15 && date.getDate() <= 21) {
       return true;
     }
     else {
