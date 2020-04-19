@@ -636,13 +636,14 @@
      }
      else {
        var result = sylbuilder.prepare(data, alldata);
-       edit(alldata, result.template, result.data, alldata.syllabus.fields, 0);
+       edit(alldata, result.template, result.data, alldata.syllabus.fields, 0, true);
      }
    }).fail(fail);
  }
  
  var currentidx = null;
- function edit(alldata, origtemplate, data, fields, idx) {
+ function edit(alldata, origtemplate, data, fields, idx, init) {
+   if (init) currentidx = null;
    if (idx === currentidx) {
      return;
    }
