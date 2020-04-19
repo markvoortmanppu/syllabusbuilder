@@ -114,6 +114,17 @@
         return new Date(2020, 2, 2);
       }
     }
+    else if (info.Semester === "Summer 2020") {
+      if (info.CourseType === "12 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2020, 4, 4);
+      }
+      if (info.CourseType === "Term II") {
+        return new Date(2020, 5, 15);
+      }
+      if (info.CourseType === "Evening Term II") {
+        return new Date(2020, 5, 29);
+      }
+    }
     return null;
   }
   
@@ -154,8 +165,7 @@
         duration = 12;
       }
       else if (alldata.syllabus.info.CourseType === "Term I" || alldata.syllabus.info.CourseType === "Term II") {
-        // this should really be 6 weeks but not changing it right now
-        duration = 8;
+        duration = 6;
       }
       else if (alldata.syllabus.info.CourseType === "Evening Term I" || alldata.syllabus.info.CourseType === "Evening Term II") {
         duration = 8;
@@ -180,32 +190,7 @@
       var thanksgiving = false;
       var springbreak = false;
       var minusduration = 0;
-      if (alldata.syllabus.info.Semester.startsWith("Summer") && duration === 8) {
-        if (alldata.syllabus.info.CourseType.startsWith("Evening")) {
-            // do nothing
-            // except subtract one week when it is term i and the class meets on monday
-            if (alldata.syllabus.info.CourseType.endsWith("Term I") && days.indexOf("Monday") >= 0) {
-              minusduration = 1;
-            }
-            // everything below is a hack to change summer i/ii to 6 weeks and start at the right time
-        }
-        else if (days.indexOf("Monday") >= 0 && days.length >= 2) {
-          minusduration = 1;
-        }
-        else {
-          if (days.indexOf("Monday") >= 0 && alldata.syllabus.info.CourseType === "Term II") {
-            // only monday classes
-            date.setDate(date.getDate() + 7);
-          }
-          minusduration = 2;
-        }
-      }
       var plusduration = 0;
-      if (alldata.syllabus.info.Semester.startsWith("Summer") && duration === 12) {
-        if (days.indexOf("Monday") >= 0 && days.length >= 2) {
-          plusduration = 1;
-        }
-      }
       if (days.length) {
         while (cnt < duration + plusduration - (duration === 8 && (thanksgiving ? 1 : 0 || springbreak ? 1 : 0 || minusduration ? minusduration : 0))) {
           for (var i = 0; i < days.length; i++) {
@@ -239,14 +224,7 @@
             var tmpdate = new Date(date.getTime());
             tmpdate.setDate(tmpdate.getDate() + mapping[days[i]]);
             var datestr = (tmpdate.getMonth()+1)+"/"+tmpdate.getDate()+"/"+tmpdate.getFullYear();
-            if (alldata.syllabus.info.Semester.startsWith("Summer") && alldata.syllabus.info.CourseType === "Term II" && days.indexOf("Monday") >= 0 && days.length >= 2 && cnt === 0 && i === 0) {
-              cnt++;
-            }
-            else if (alldata.syllabus.info.Semester.startsWith("Summer") && (alldata.syllabus.info.CourseType === "Term I" || alldata.syllabus.info.CourseType === "Term II") && days.indexOf("Monday") >= 0 && days.length >= 2 && cnt === duration - minusduration && i !== 0) {
-            }
-            else if (alldata.syllabus.info.Semester.startsWith("Summer") && alldata.syllabus.info.CourseType === "12 Week" && days.indexOf("Monday") >= 0 && days.length >= 2 && cnt === duration + plusduration && i !== 0) {
-            }
-            else if (isThanksgivingWeek(date)) {
+            if (isThanksgivingWeek(date)) {
               // skip the thanksgiving week
               template += "### Thanksgiving Break (" + datestr + ")\n";
               thanksgiving = true;
@@ -256,12 +234,12 @@
               template += "### Spring Break (" + datestr + ")\n";
               springbreak = true;
             }
-            else if (isMemorialDay(tmpdate)) {
-              template += "### Memorial Day (" + datestr + ")\n";
-              if (days.length >= 2) {
-                cnt++;
-              }
-            }
+            //else if (isMemorialDay(tmpdate)) {
+            //  template += "### Memorial Day (" + datestr + ")\n";
+            //  if (days.length >= 2) {
+            //    cnt++;
+            //  }
+            //}
             else {
               if (i === 0) {
                 cnt++;
@@ -274,6 +252,9 @@
               }
               if (isMLKDay(tmpdate)) {
                 template += "**NOTE: CLASS DOES NOT MEET DUE TO MARTIN LUTHER KING DAY**\n";
+              }
+              if (isMemorialDay(tmpdate)) {
+                template += "**NOTE: CLASS DOES NOT MEET DUE TO MEMORIAL DAY**\n";
               }
               if (isFourthOfJuly(tmpdate)) {
                 template += "**NOTE: CLASS DOES NOT MEET DUE TO FOURTH OF JULY**\n";
