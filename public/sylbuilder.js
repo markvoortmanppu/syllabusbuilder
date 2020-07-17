@@ -125,6 +125,14 @@
         return new Date(2020, 5, 29);
       }
     }
+    else if (info.Semester === "Fall 2020") {
+      if (info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2020, 7, 31);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2020, 9, 26);
+      }
+    }
     return null;
   }
   
@@ -165,7 +173,12 @@
         duration = 12;
       }
       else if (alldata.syllabus.info.CourseType === "Term I" || alldata.syllabus.info.CourseType === "Term II") {
-        duration = 6;
+        if (alldata.syllabus.info.Semester.startsWith("Summer")) {
+          duration = 6;
+        }
+        else {
+          duration = 8;
+        }
       }
       else if (alldata.syllabus.info.CourseType === "Evening Term I" || alldata.syllabus.info.CourseType === "Evening Term II") {
         duration = 8;
