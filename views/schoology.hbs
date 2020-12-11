@@ -116,7 +116,7 @@
    content.append("<b>Available Courses</b><br>");
    if (!data.sections.section) {
      content.append("<hr>");
-     content.append("None.");
+     content.append("None (if you expect to see courses please try again, sometimes they do not seem to load the first time).");
    }
    else {
      function displaySemester(longname, shortname) {
@@ -656,6 +656,8 @@
    $("#content").empty();
    $("#content").append('<div id="buttons"></div><div id="output"></div>');
    
+   $("#menu").append("<b>Please edit below and save periodically to prevent the session from timing out.</b><br>");
+   
    var a = $("<a>");
    $("#menu").append(a);
    a.addClass("btn btn-primary btn-sm");
@@ -672,7 +674,8 @@
    a.append("Save");
    a.click(function() {
      save(alldata, function() {
-       initSchoology();
+       alert("Data saved!");
+       //initSchoology();
      });
    });
    $("#menu").append(" ");
@@ -762,7 +765,7 @@
      data[idx].value = input.val();
      fields[data[idx].property] = input.val();
    });
-   input.focus();
+   //input.focus();
  }
  
  window.onload = function() {
