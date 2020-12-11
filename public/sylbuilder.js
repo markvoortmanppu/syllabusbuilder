@@ -133,6 +133,17 @@
         return new Date(2020, 9, 26);
       }
     }
+    else if (info.Semester === "Spring 2021") {
+      if (info.CourseType === "15 Week") {
+        return new Date(2021, 0, 18);
+      }
+      if (info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2021, 0, 11);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2021, 2, 8);
+      }
+    }
     return null;
   }
   
@@ -165,6 +176,22 @@
     }
     else if (template[template.length-1] !== "\n") {
       template += "\n";
+    }
+    // prepare fields
+    if (!alldata.syllabus.fields) {
+      alldata.syllabus.fields = {};
+      // fill in information from older course if it matches
+      for (var i = alldata.syllabi.length-1; i >= 0; i--) {
+        var tmpsyllabus = alldata.syllabi[i];
+        if (alldata.syllabus.info.SectionID !== tmpsyllabus.info.SectionID && alldata.syllabus.info.CourseCode === tmpsyllabus.info.CourseCode && alldata.syllabus.info.CourseDuration === tmpsyllabus.info.CourseDuration) {
+          for (var key in tmpsyllabus.fields) {
+            if (!(key in alldata.syllabus.fields)) {
+              alldata.syllabus.fields[key] = tmpsyllabus.fields[key];
+            }
+          }
+          break;
+        }
+      }
     }
     if (!alldata.syllabus.info.DoNotGenerateSchedule && getFirstWeek(alldata.syllabus.info)) {
       var date = getFirstWeek(alldata.syllabus.info);
@@ -199,13 +226,12 @@
         "Saturday": 5,
         "Sunday": 6
       };
-      var cnt = 0;
-      var thanksgiving = false;
-      var springbreak = false;
-      var minusduration = 0;
-      var plusduration = 0;
+      // convert weeks to modules
       if (days.length) {
-        while (cnt < duration + plusduration - (duration === 8 && (thanksgiving ? 1 : 0 || springbreak ? 1 : 0 || minusduration ? minusduration : 0))) {
+        var cnt = 0;
+        var modulecnt = 0;
+        while (cnt <= 15) {
+          var counted = false;
           for (var i = 0; i < days.length; i++) {
             var weekpart = "";
             if (days.length > 1) {
@@ -234,6 +260,32 @@
                 weekpart = "h";
               }
             }
+            if (!counted) {
+              counted = true;
+              cnt++;
+            }
+            modulecnt++;
+            if (alldata.syllabus.fields && alldata.syllabus.fields["Week"+cnt+weekpart+"Title"] && !alldata.syllabus.fields["Module"+modulecnt+"Title"+days.length+"W"]) {
+              alldata.syllabus.fields["Module"+modulecnt+"Title"+days.length+"W"] = alldata.syllabus.fields["Week"+cnt+weekpart+"Title"];
+            }
+            if (alldata.syllabus.fields && alldata.syllabus.fields["Week"+cnt+weekpart+"Description"] && !alldata.syllabus.fields["Module"+modulecnt+"Description"+days.length+"W"]) {
+              alldata.syllabus.fields["Module"+modulecnt+"Description"+days.length+"W"] = alldata.syllabus.fields["Week"+cnt+weekpart+"Description"];
+            }
+          }
+        }
+      }
+      // generate schedule
+      var cnt = 0;
+      var modulecnt = 0;
+      var thanksgiving = false;
+      var mlkday = false;
+      var springbreak = false;
+      var minusduration = 0;
+      var plusduration = 0;
+      if (days.length) {
+        while (cnt < duration + plusduration - (duration === 8 && (thanksgiving ? 1 : 0 || springbreak ? 1 : 0 || minusduration ? minusduration : 0))) {
+          var counted = false;
+          for (var i = 0; i < days.length; i++) {
             var tmpdate = new Date(date.getTime());
             tmpdate.setDate(tmpdate.getDate() + mapping[days[i]]);
             var datestr = (tmpdate.getMonth()+1)+"/"+tmpdate.getDate()+"/"+tmpdate.getFullYear();
@@ -242,7 +294,7 @@
               template += "### Thanksgiving Break (" + datestr + ")\n";
               thanksgiving = true;
             }
-            else if (isSpringBreakWeek(tmpdate, getFirstWeek(alldata.syllabus.info), alldata.syllabus.info.CourseType)) {
+            else if (date.getFullYear() !== 2021 && isSpringBreakWeek(tmpdate, getFirstWeek(alldata.syllabus.info), alldata.syllabus.info.CourseType)) {
               // skip the spring break week
               template += "### Spring Break (" + datestr + ")\n";
               springbreak = true;
@@ -253,13 +305,20 @@
             //    cnt++;
             //  }
             //}
+            else if (isMLKDay(tmpdate) && alldata.syllabus.info.CourseType === "15 Week") {
+              mlkday = true;
+            }
             else {
-              if (i === 0) {
+              if (!counted) {
+                counted = true;
                 cnt++;
               }
-              var regexp = new RegExp("\{{Week"+cnt+weekpart+"Date}}", "g");
-              template = template.replace(regexp, (tmpdate.getMonth()+1)+"/"+tmpdate.getDate()+"/"+tmpdate.getFullYear());
-              template += "### Week " + cnt + weekpart + ": \{{Week" + cnt + weekpart + "Title}} (" + datestr + ")\n";
+              modulecnt++;
+              template += "### Module " + modulecnt + ": \{{Module" + modulecnt + "Title" + days.length + "W}}";
+              if (cnt < 15 || !mlkday) {
+                template += " (" + datestr + ")";
+              }
+              template += "\n";
               if (isLaborDay(tmpdate)) {
                 template += "**NOTE: CLASS DOES NOT MEET DUE TO LABOR DAY**\n";
               }
@@ -276,26 +335,11 @@
                 template += "**NOTE: FOR DAY CLASSES PLEASE CHECK THE FINAL EXAM SCHEDULE**\n";
                 template += "https://www.pointpark.edu/About/AdminDepts/RegistrarsOffice/StudentResources/FinalExamsSchedule\n";
               }
-              template += "\{{Week" + cnt + weekpart + "Description}}\n"
+              template += "\{{Module" + modulecnt + "Description" + days.length + "W}}\n";
               template += "\n";
             }
           }
           date = new Date(date.getFullYear(), date.getMonth(), date.getDate()+7);
-        }
-      }
-    }
-    if (!alldata.syllabus.fields) {
-      alldata.syllabus.fields = {};
-      // fill in information from older course if it matches
-      for (var i = alldata.syllabi.length-1; i >= 0; i--) {
-        var tmpsyllabus = alldata.syllabi[i];
-        if (alldata.syllabus.info.SectionID !== tmpsyllabus.info.SectionID && alldata.syllabus.info.CourseCode === tmpsyllabus.info.CourseCode && alldata.syllabus.info.CourseDuration === tmpsyllabus.info.CourseDuration) {
-          for (var key in tmpsyllabus.fields) {
-            if (!(key in alldata.syllabus.fields)) {
-              alldata.syllabus.fields[key] = tmpsyllabus.fields[key];
-            }
-          }
-          break;
         }
       }
     }
