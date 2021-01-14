@@ -158,25 +158,6 @@
     if (template === null) {
       return null;
     }
-    // fill in personal info
-    for (var key in alldata.info) {
-      var regexp = new RegExp("\{{"+key+"}}", "g");
-      template = template.replace(regexp, alldata.info[key]);
-    }
-    // fill in course info
-    if (alldata.syllabus.info) {
-      for (var key in alldata.syllabus.info) {
-        var regexp = new RegExp("\{{"+key+"}}", "g");
-        template = template.replace(regexp, alldata.syllabus.info[key]);
-      }
-    }
-    // extend template with schedule at the end
-    if (template[template.length-2] !== "\n" && template[template.length-1] !== "\n") {
-      template += "\n\n";
-    }
-    else if (template[template.length-1] !== "\n") {
-      template += "\n";
-    }
     // prepare fields
     if (!alldata.syllabus.fields) {
       alldata.syllabus.fields = {};
@@ -192,6 +173,31 @@
           break;
         }
       }
+    }
+    // fill in personal info
+    for (var key in alldata.info) {
+      var regexp = new RegExp("\{{"+key+"}}", "g");
+      template = template.replace(regexp, alldata.info[key]);
+    }
+    // fill in course info
+    if (alldata.syllabus.info) {
+      var isSpecialTopics = alldata.syllabus.info.CourseCode && alldata.syllabus.info.CourseCode.endsWith("95");
+      for (var key in alldata.syllabus.info) {
+        if (isSpecialTopics && (key === "CourseName" || key === "CourseDescription" || key === "CourseObjectives")) {
+          alldata.syllabus.fields[key] = alldata.syllabus.info[key];
+        }
+        else {
+          var regexp = new RegExp("\{{"+key+"}}", "g");
+          template = template.replace(regexp, alldata.syllabus.info[key]);
+        }
+      }
+    }
+    // extend template with schedule at the end
+    if (template[template.length-2] !== "\n" && template[template.length-1] !== "\n") {
+      template += "\n\n";
+    }
+    else if (template[template.length-1] !== "\n") {
+      template += "\n";
     }
     if (!alldata.syllabus.info.DoNotGenerateSchedule && getFirstWeek(alldata.syllabus.info)) {
       var date = getFirstWeek(alldata.syllabus.info);
