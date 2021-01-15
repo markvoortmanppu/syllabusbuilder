@@ -184,7 +184,9 @@
       var isSpecialTopics = alldata.syllabus.info.CourseCode && alldata.syllabus.info.CourseCode.endsWith("95");
       for (var key in alldata.syllabus.info) {
         if (isSpecialTopics && (key === "CourseName" || key === "CourseDescription" || key === "CourseObjectives")) {
-          alldata.syllabus.fields[key] = alldata.syllabus.info[key];
+          if (typeof alldata.syllabus.fields[key] !== "string") {
+            alldata.syllabus.fields[key] = alldata.syllabus.info[key];
+          }
         }
         else {
           var regexp = new RegExp("\{{"+key+"}}", "g");
