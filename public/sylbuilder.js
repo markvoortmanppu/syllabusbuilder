@@ -64,6 +64,10 @@
     if (date.getMonth() === 6 && date.getDate() === 4) {
       return true;
     }
+    if (date.getMonth() === 6 && date.getDate() === 5 && date.getDay() === 1) {
+      // 4th observed
+      return true;
+    }
     else {
       return false;
     }
@@ -142,6 +146,20 @@
       }
       if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
         return new Date(2021, 2, 8);
+      }
+    }
+    else if (info.Semester === "Summer 2021") {
+      if (info.CourseType === "12 Week" || info.CourseType === "Term I") {
+        return new Date(2021, 4, 3);
+      }
+      if (info.CourseType === "Evening Term I") {
+        return new Date(2021, 4, 10);
+      }
+      if (info.CourseType === "Term II") {
+        return new Date(2021, 5, 14);
+      }
+      if (info.CourseType === "Evening Term II") {
+        return new Date(2021, 6, 5);
       }
     }
     return null;
