@@ -149,7 +149,7 @@
       }
     }
     else if (info.Semester === "Summer 2021") {
-      if (info.CourseType === "12 Week" || info.CourseType === "Term I") {
+      if (info.CourseType === "12 Week" || info.CourseType === "15 Week" || info.CourseType === "Term I") {
         return new Date(2021, 4, 3);
       }
       if (info.CourseType === "Evening Term I") {
