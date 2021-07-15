@@ -12,7 +12,6 @@ var PDFMerge = require("pdf-merge");
 
 var sylbuilder = require("./public/sylbuilder");
 var md5file = require("md5-file");
-var markdownpdf = require("markdown-pdf");
 const csv = require("csvtojson");
 
 require("dotenv").config();
@@ -28,6 +27,8 @@ var templates = require("./routes/templates");
 var authHelper = require("./helpers/auth");
 var schlgy = require("./schoology");
 var nodemailer = require("nodemailer");
+
+const { exec } = require("child_process");
 
 var app = express();
 
@@ -240,7 +241,60 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
   var fname = (year + "_" + semester + "_" + alldata.syllabus.info.CourseCode + "_" + alldata.syllabus.info.Section + "_" + alldata.info.NameReversed + ".pdf").replace(/,/g, "").replace(/ /g, "_");
 
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
-  //fs.writeFile(tmpname, template, function(err) {
+  fs.writeFile(tmpname.replace(".pdf", ".md"), template, function(err) {
+    exec("pandoc -f markdown+hard_line_breaks " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+      //console.log(`stdout: ${stdout}`);
+      var pdfFileAppendix = syllabus.info.PdfFileAppendix;
+      var otherpdf = !pdfFileAppendix ? "" : "data/" + syllabidata.email + ":" + pdfFileAppendix.id + ":" + pdfFileAppendix.name;
+      concatPDFs(tmpname, otherpdf, function(outfile) {
+        if (err) {
+          cb({
+            error: err.toString()
+          });
+        }
+        else {
+          fs.stat(outfile, function(err, stats) {
+            if (err) {
+              cb({
+                error: err.toString()
+              });
+            }
+            else {
+              md5file(outfile, function(err, hash) {
+                if (err) {
+                  cb({
+                    error: err.toString()
+                  });
+                }
+                else {
+                  schlgy.init(credentials.consumerkey, credentials.consumersecret, function(instance) {
+                    instance.uploadFile({
+                      fpath: outfile,
+                      fname: fname,
+                      fsize: stats.size,
+                      mimetype: "application/pdf",
+                      md5: hash
+                    }, function(data) {
+                      cb(data);
+                    });
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+  });
+  /*
   markdownpdf({
     cssPath: __dirname + "/public/bootstrap_pdf.min.css",
     paperFormat: "Letter"
@@ -286,6 +340,7 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
       }
     });
   });
+  */
 }
 
 app.get("/upload", async function(req, res, next) {
