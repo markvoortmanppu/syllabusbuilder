@@ -6,7 +6,7 @@ var PDFMerge = require("pdf-merge");
 
 var sylbuilder = require("./public/sylbuilder");
 var md5file = require("md5-file");
-var markdownpdf = require("markdown-pdf");
+const { exec } = require("child_process");
 
 function createpdfs() {
   fs.readdir("data", function(err, files) {
@@ -119,25 +119,32 @@ function createAndUploadPdf(templatedata, syllabidata, sectionid, cb) {
   var fname = (year + "_" + semester + "_" + alldata.syllabus.info.CourseCode + "_" + alldata.syllabus.info.Section + "_" + alldata.info.NameReversed + ".pdf").replace(/,/g, "").replace(/ /g, "_");
 
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
-  //fs.writeFile(tmpname, template, function(err) {
-  markdownpdf({
-    cssPath: __dirname + "/public/bootstrap_pdf.min.css",
-    paperFormat: "Letter"
-  }).from.string(template).to(tmpname, function(err) {
-    var pdfFileAppendix = syllabus.info.PdfFileAppendix;
-    var otherpdf = !pdfFileAppendix ? "" : "data/" + syllabidata.email + ":" + pdfFileAppendix.id + ":" + pdfFileAppendix.name;
-    concatPDFs(tmpname, otherpdf, function(outfile) {
-      if (err) {
-        cb({
-          error: err.toString()
-        });
+  fs.writeFile(tmpname.replace(".pdf", ".md"), template.replace("![](https://mvoortman.it.pointpark.edu/logo.png)", "![](https://mvoortman.it.pointpark.edu/logo.png){ width=150px }"), function(err) {
+    exec("pandoc -f markdown+hard_line_breaks -V colorlinks=true -V linkcolor=blue -V urlcolor=blue -V toccolor=blue --self-contained " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
       }
-      else {
-        fs.rename(outfile, "data/pdfs/" + fname, function (err) {
-          if (err) throw err;
-          cb({});
-        });
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
       }
+      //console.log(`stdout: ${stdout}`);
+      var pdfFileAppendix = syllabus.info.PdfFileAppendix;
+      var otherpdf = !pdfFileAppendix ? "" : "data/" + syllabidata.email + ":" + pdfFileAppendix.id + ":" + pdfFileAppendix.name;
+      concatPDFs(tmpname, otherpdf, function(outfile) {
+        if (err) {
+          cb({
+            error: err.toString()
+          });
+        }
+        else {
+          fs.rename(outfile, "data/pdfs/" + fname, function (err) {
+            if (err) throw err;
+            cb({});
+          });
+        }
+      });
     });
   });
 }

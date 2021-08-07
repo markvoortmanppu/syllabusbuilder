@@ -241,8 +241,8 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
   var fname = (year + "_" + semester + "_" + alldata.syllabus.info.CourseCode + "_" + alldata.syllabus.info.Section + "_" + alldata.info.NameReversed + ".pdf").replace(/,/g, "").replace(/ /g, "_");
 
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
-  fs.writeFile(tmpname.replace(".pdf", ".md"), template, function(err) {
-    exec("pandoc -f markdown+hard_line_breaks " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
+  fs.writeFile(tmpname.replace(".pdf", ".md"), template.replace("![](https://mvoortman.it.pointpark.edu/logo.png)", "![](https://mvoortman.it.pointpark.edu/logo.png){ width=150px }"), function(err) {
+    exec("pandoc -f markdown+hard_line_breaks -V colorlinks=true -V linkcolor=blue -V urlcolor=blue -V toccolor=blue --self-contained " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
         return;

@@ -162,6 +162,14 @@
         return new Date(2021, 6, 5);
       }
     }
+    else if (info.Semester === "Fall 2021") {
+      if (info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2021, 7, 30);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2021, 9, 25);
+      }
+    }
     return null;
   }
   
@@ -359,7 +367,7 @@
               }
               if (cnt === 15) {
                 template += "**NOTE: FOR DAY CLASSES PLEASE CHECK THE FINAL EXAM SCHEDULE**\n";
-                template += "https://www.pointpark.edu/About/AdminDepts/RegistrarsOffice/StudentResources/FinalExamsSchedule\n";
+                template += "[https://www.pointpark.edu/About/AdminDepts/RegistrarsOffice/StudentResources/FinalExamsSchedule](https://www.pointpark.edu/About/AdminDepts/RegistrarsOffice/StudentResources/FinalExamsSchedule)\n";
               }
               template += "\{{Module" + modulecnt + "Description" + days.length + "W}}\n";
               template += "\n";
