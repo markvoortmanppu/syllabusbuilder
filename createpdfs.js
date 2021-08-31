@@ -27,17 +27,26 @@ function createpdf(fname, cb) {
   function checkIfDone() {
     count--;
     if (count <= 0) {
-      cb();
+      if (cb) {
+        cb();
+        cb = null;
+      }
     }
   }
   if (fname.indexOf("@") === -1 || fname.indexOf(":") >= 0) {
-    cb();
+    if (cb) {
+      cb();
+      cb = null;
+    }
   }
   else {
     loadTemplates(function(templatedata) {
       loadData(fname.substring(0, fname.length-5), function(syllabidata) {
         if (!syllabidata.syllabi) {
-          cb();
+          if (cb) {
+            cb();
+            cb = null;
+          }
         }
         else {
           for (var j = 0; j < syllabidata.syllabi.length; j++) {
@@ -49,7 +58,10 @@ function createpdf(fname, cb) {
             }
           }
           if (count === 0) {
-            cb();
+            if (cb) {
+              cb();
+              cb = null;
+            }
           }
         }
       });
