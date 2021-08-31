@@ -120,14 +120,14 @@ function createAndUploadPdf(templatedata, syllabidata, sectionid, cb) {
 
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
   fs.writeFile(tmpname.replace(".pdf", ".md"), template.replace("![](https://mvoortman.it.pointpark.edu/logo.png)", "![](https://mvoortman.it.pointpark.edu/logo.png){ width=150px }"), function(err) {
-    exec("pandoc -f markdown+hard_line_breaks -V colorlinks=true -V linkcolor=blue -V urlcolor=blue -V toccolor=blue --self-contained " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
+    exec("pandoc -f markdown+hard_line_breaks -V colorlinks=true -V linkcolor=blue -V urlcolor=blue -V toccolor=blue -V geometry:margin=1in --self-contained --pdf-engine=xelatex " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
         return;
       }
       if (stderr) {
         console.log(`stderr: ${stderr}`);
-        return;
+        //return;
       }
       //console.log(`stdout: ${stdout}`);
       var pdfFileAppendix = syllabus.info.PdfFileAppendix;
