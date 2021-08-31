@@ -11,26 +11,36 @@ const { exec } = require("child_process");
 function createpdfs() {
   fs.readdir("data", function(err, files) {
     if (err) throw err;
-    for (var i = 0; i < files.length; i++) {
-      (function(i) {
-        if (files[i].indexOf("@") >= 0 && files[i].indexOf(":") === -1) {
-          loadTemplates(function(templatedata) {
-            loadData(files[i].substring(0, files[i].length-5), function(syllabidata) {
-              if (syllabidata.syllabi) {
-                for (var j = 0; j < syllabidata.syllabi.length; j++) {
-                  if (syllabidata.syllabi[j].info && syllabidata.syllabi[j].info.SectionID) {
-                    createAndUploadPdf(templatedata, syllabidata, syllabidata.syllabi[j].info.SectionID, function(data) {
-                      // ...
-                    });
-                  }
-                }
-              }
-            });
-          });
-        }
-      })(i);
+    function next(i) {
+      if (i < files.length) {
+        createpdf(files[i], function() {
+          next(i+1);
+        })
+      }
     }
+    next(0);
   });
+}
+
+function createpdf(fname, cb) {
+  if (fname.indexOf("@") >= 0 && fname.indexOf(":") === -1) {
+    loadTemplates(function(templatedata) {
+      loadData(fname.substring(0, fname.length-5), function(syllabidata) {
+        if (syllabidata.syllabi) {
+          for (var j = 0; j < syllabidata.syllabi.length; j++) {
+            if (syllabidata.syllabi[j].info && syllabidata.syllabi[j].info.SectionID) {
+              createAndUploadPdf(templatedata, syllabidata, syllabidata.syllabi[j].info.SectionID, function(data) {
+                cb();
+              });
+            }
+          }
+        }
+      });
+    });
+  }
+  else {
+    cb();
+  }
 }
 
 function loadTemplates(cb) {
