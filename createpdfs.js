@@ -23,23 +23,34 @@ function createpdfs() {
 }
 
 function createpdf(fname, cb) {
-  if (fname.indexOf("@") >= 0 && fname.indexOf(":") === -1) {
+  var count = 0;
+  function checkIfDone() {
+    count--;
+    if (count <= 0) {
+      cb();
+    }
+  }
+  if (fname.indexOf("@") === -1 || fname.indexOf(":") >= 0) {
+    cb();
+  }
+  else {
     loadTemplates(function(templatedata) {
       loadData(fname.substring(0, fname.length-5), function(syllabidata) {
-        if (syllabidata.syllabi) {
+        if (!syllabidata.syllabi) {
+          cb();
+        }
+        else {
           for (var j = 0; j < syllabidata.syllabi.length; j++) {
             if (syllabidata.syllabi[j].info && syllabidata.syllabi[j].info.SectionID) {
+              count++;
               createAndUploadPdf(templatedata, syllabidata, syllabidata.syllabi[j].info.SectionID, function(data) {
-                cb();
+                checkIfDone();
               });
             }
           }
         }
       });
     });
-  }
-  else {
-    cb();
   }
 }
 
