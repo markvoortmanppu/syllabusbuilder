@@ -48,6 +48,9 @@ function createpdf(fname, cb) {
               });
             }
           }
+          if (count === 0) {
+            cb();
+          }
         }
       });
     });
