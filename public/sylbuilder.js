@@ -339,7 +339,7 @@
               template += "### Thanksgiving Break (" + datestr + ")\n";
               thanksgiving = true;
             }
-            else if (date.getFullYear() !== 2021 && isSpringBreakWeek(tmpdate, getFirstWeek(alldata.syllabus.info), alldata.syllabus.info.CourseType)) {
+            else if (date.getFullYear() !== 2021 && isSpringBreakWeek(tmpdate, getFirstWeek(alldata.syllabus.info), alldata.syllabus.info.CourseType) && duration !== 8) {
               // skip the spring break week
               template += "### Spring Break (" + datestr + ")\n";
               springbreak = true;
