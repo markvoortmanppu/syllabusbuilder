@@ -170,6 +170,17 @@
         return new Date(2021, 9, 25);
       }
     }
+    else if (info.Semester === "Spring 2022") {
+      if (info.CourseType === "15 Week") {
+        return new Date(2022, 0, 10);
+      }
+      if (info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2022, 0, 10);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2022, 2, 7);
+      }
+    }
     return null;
   }
   
