@@ -183,16 +183,16 @@
     }
     else if (info.Semester === "Summer 2022") {
       if (info.CourseType === "12 Week" || info.CourseType === "15 Week" || info.CourseType === "Term I") {
-        return new Date(2021, 4, 2);
+        return new Date(2022, 4, 2);
       }
       if (info.CourseType === "Evening Term I") {
-        return new Date(2021, 4, 9);
+        return new Date(2022, 4, 9);
       }
       if (info.CourseType === "Term II") {
-        return new Date(2021, 5, 13);
+        return new Date(2022, 5, 13);
       }
       if (info.CourseType === "Evening Term II") {
-        return new Date(2021, 6, 4);
+        return new Date(2022, 6, 4);
       }
     }
     return null;
