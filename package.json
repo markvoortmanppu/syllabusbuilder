@@ -16,7 +16,6 @@
     "formidable": "^1.2.1",
     "hbs": "^4.1.1",
     "jsonwebtoken": "^8.5.1",
-    "markdown-pdf": "^9.0.0",
     "md5-file": "^4.0.0",
     "morgan": "^1.9.1",
     "nodemailer": "^6.3.1",
