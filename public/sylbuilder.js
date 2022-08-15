@@ -195,6 +195,14 @@
         return new Date(2022, 6, 4);
       }
     }
+    else if (info.Semester === "Fall 2022") {
+      if (info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2022, 7, 29);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2022, 9, 24);
+      }
+    }
     return null;
   }
   
