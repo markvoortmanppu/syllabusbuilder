@@ -214,6 +214,20 @@
         return new Date(2022, 2, 6);
       }
     }
+    else if (info.Semester === "Summer 2023") {
+      if (info.CourseType === "12 Week" || info.CourseType === "15 Week" || info.CourseType === "Term I") {
+        return new Date(2023, 4, 1);
+      }
+      if (info.CourseType === "Evening Term I") {
+        return new Date(2023, 4, 8);
+      }
+      if (info.CourseType === "Term II") {
+        return new Date(2023, 5, 12);
+      }
+      if (info.CourseType === "Evening Term II") {
+        return new Date(2023, 6, 3);
+      }
+    }
     return null;
   }
   
