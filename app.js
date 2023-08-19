@@ -20,7 +20,7 @@ var index = require("./routes/index");
 var authorize = require("./routes/authorize");
 var builder = require("./routes/builder");
 var courses = require("./routes/courses");
-var schoology = require("./routes/schoology");
+var syllabi = require("./routes/syllabi");
 var feedback = require("./routes/feedback");
 var templates = require("./routes/templates");
 
@@ -48,7 +48,7 @@ app.use("/", index);
 app.use("/authorize", authorize);
 app.use("/builder", builder);
 app.use("/courses", courses);
-app.use("/schoology", schoology);
+app.use("/syllabi", syllabi);
 app.use("/feedback", feedback);
 app.use("/templates", templates);
 
@@ -195,6 +195,135 @@ function concatPDFs(pdf1, pdf2, cb) {
   }
 }
 
+function createAndDownloadPdf(credentials, templatedata, syllabidata, sectionid, cb) {
+  var syllabus = null;
+  for (var i = syllabidata.syllabi.length-1; i >= 0; i--) {
+    if (syllabidata.syllabi[i].info && syllabidata.syllabi[i].info.SectionID === sectionid) {
+      syllabus = syllabidata.syllabi[i];
+    }
+  }
+  var alldata = {
+    email: syllabidata.email,
+    info: syllabidata.info,
+    syllabi: syllabidata.syllabi,
+    syllabus: syllabus
+  };
+
+  var result = sylbuilder.prepare(templatedata, alldata);
+  if (result === null) {
+    cb({
+      error: "Error while preparing syllabus."
+    });
+    return;
+  }
+  var template = result.template;
+  var data = result.data;
+
+  // replace other fields
+  for (var i = 0; i < data.length; i++) {
+    var entry = data[i];
+    var regexp = new RegExp("\{{"+entry.property+"}}", "g");
+    template = template.replace(regexp, entry.value?entry.value:"");
+  }
+
+  var parts = alldata.syllabus.info.Semester.split(" ");
+  var semester = parts[0];
+  var year = parts[1];
+  if (semester === "Fall") {
+    semester = "F";
+  }
+  else if (semester === "Spring") {
+    semester = "S";
+  }
+  else if (semester === "Summer") {
+    semester = "Z";
+  }
+  var fname = (year + "_" + semester + "_" + alldata.syllabus.info.CourseCode + "_" + alldata.syllabus.info.Section + "_" + alldata.info.NameReversed + ".pdf").replace(/,/g, "").replace(/ /g, "_");
+
+  var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
+  fs.writeFile(tmpname.replace(".pdf", ".md"), template.replace("![](https://pointparksyllabus.org/logo.png)", "![](https://pointparksyllabus.org/logo.png){ width=150px }"), function(err) {
+    exec("pandoc -f markdown+autolink_bare_uris+hard_line_breaks-raw_tex -V colorlinks=true -V linkcolor=blue -V urlcolor=blue -V toccolor=blue -V geometry:margin=1in --self-contained --pdf-engine=xelatex " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        //return;
+      }
+      //console.log(`stdout: ${stdout}`);
+      var pdfFileAppendix = syllabus.info.PdfFileAppendix;
+      var otherpdf = !pdfFileAppendix ? "" : "data/" + syllabidata.email + ":" + pdfFileAppendix.id + ":" + pdfFileAppendix.name;
+      concatPDFs(tmpname, otherpdf, function(outfile) {
+        if (err) {
+          cb({
+            error: err.toString()
+          });
+        }
+        else {
+          fs.stat(outfile, function(err, stats) {
+            if (err) {
+              cb({
+                error: err.toString()
+              });
+            }
+            else {
+              cb({
+                fpath: outfile,
+                fname: fname,
+                fsize: stats.size,
+              });
+              /*
+              md5file(outfile, function(err, hash) {
+                if (err) {
+                  cb({
+                    error: err.toString()
+                  });
+                }
+                else {
+                  schlgy.init(credentials.consumerkey, credentials.consumersecret, function(instance) {
+                    instance.uploadFile({
+                      fpath: outfile,
+                      fname: fname,
+                      fsize: stats.size,
+                      mimetype: "application/pdf",
+                      md5: hash
+                    }, function(data) {
+                      cb(data);
+                    });
+                  });
+                }
+              });
+              */
+            }
+          });
+        }
+      });
+    });
+  });
+}
+
+app.get("/download", async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  const userEmail = req.cookies.graph_user_email;
+  if (accessToken && userEmail) {
+    loadTemplates(req, res, function(templatedata) {
+      loadData(req, res, function(syllabidata) {
+        createAndDownloadPdf(null, templatedata, syllabidata, req.query.section_id, function(data) {
+          if (data.error) {
+            res.send(data);
+          }
+          else {
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader("Content-Disposition", "form-data; filename=\"" + data.fname + "\"");
+            res.sendFile(data.fpath);
+          }
+        });
+      });
+    });
+  }
+});
+
 function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, cb) {
   var syllabus = null;
   for (var i = syllabidata.syllabi.length-1; i >= 0; i--) {
@@ -294,53 +423,6 @@ function createAndUploadPdf(credentials, templatedata, syllabidata, sectionid, c
       });
     });
   });
-  /*
-  markdownpdf({
-    cssPath: __dirname + "/public/bootstrap_pdf.min.css",
-    paperFormat: "Letter"
-  }).from.string(template).to(tmpname, function(err) {
-    var pdfFileAppendix = syllabus.info.PdfFileAppendix;
-    var otherpdf = !pdfFileAppendix ? "" : "data/" + syllabidata.email + ":" + pdfFileAppendix.id + ":" + pdfFileAppendix.name;
-    concatPDFs(tmpname, otherpdf, function(outfile) {
-      if (err) {
-        cb({
-          error: err.toString()
-        });
-      }
-      else {
-        fs.stat(outfile, function(err, stats) {
-          if (err) {
-            cb({
-              error: err.toString()
-            });
-          }
-          else {
-            md5file(outfile, function(err, hash) {
-              if (err) {
-                cb({
-                  error: err.toString()
-                });
-              }
-              else {
-                schlgy.init(credentials.consumerkey, credentials.consumersecret, function(instance) {
-                  instance.uploadFile({
-                    fpath: outfile,
-                    fname: fname,
-                    fsize: stats.size,
-                    mimetype: "application/pdf",
-                    md5: hash
-                  }, function(data) {
-                    cb(data);
-                  });
-                });
-              }
-            });
-          }
-        });
-      }
-    });
-  });
-  */
 }
 
 app.get("/upload", async function(req, res, next) {

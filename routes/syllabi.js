@@ -5,7 +5,7 @@ var authHelper = require("../helpers/auth");
 
 /* GET builder page. */
 router.get("/", async function(req, res, next) {
-  let parms = { title: "Schoology", active: { schoology: true } };
+  let parms = { title: "Syllabi", active: { syllabi: true } };
 
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const userName = req.cookies.graph_user_name;
@@ -22,7 +22,7 @@ router.get("/", async function(req, res, next) {
     //parms.debug = parms.signInUrl;
   }
 
-  res.render("schoology", parms);
+  res.render("syllabi", parms);
 });
 
 module.exports = router;

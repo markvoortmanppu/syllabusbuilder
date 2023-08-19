@@ -74,57 +74,6 @@ function performRequest(conn, endpoint, method, data, success) {
   }, 1000);
 }
 
-/*
-performRequest("users/me", "GET", {
-  // ...
-}, function(data) {
-  console.log(data);
-  // location: users/60806812
-});
-*/
-
-/*
-performRequest("users/60806812", "GET", {
-  // ...
-}, function(data) {
-  console.log(data);
-});
-*/
-
-/*
-performRequest("users/60806812/sections", "GET", {
-  // ...
-}, function(data) {
-  console.log(data);
-  //var path = "/home/mvoortman/www/schoology";
-  //fs.mkdirSync(path, "0755", true);
-  //var section = data.section;
-  //for (var i = 0; i < section.length; i++) {
-  //  var coursepath = path + "/" + section[i].course_code;
-  //  fs.mkdirSync(coursepath, "0755", true);
-  //  fs.writeFileSync(coursepath + "/course_title.txt", section[i].course_title);
-  //  fs.writeFileSync(coursepath + "/section_title.txt", section[i].section_title);
-  //}
-});
-*/
-
-/*
-performRequest("courses/1348048509/sections", "GET", {
-  // ...
-}, function(data) {
-  console.log(data);
-});
-*/
-
-/*
-performRequest("courses/1348048511/folder/0", "GET", {
-  // ...
-}, function(data) {
-  console.log(data);
-  console.log(JSON.stringify(data, null, 2));
-});
-*/
-
 function init(consumerKey, consumerSecret, cb) {
   var conn = {
     host: "api.schoology.com",

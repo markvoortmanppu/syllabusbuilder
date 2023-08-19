@@ -42,7 +42,7 @@
            var str = "Code: " + CATALOG[i].crs_cde + "\n";
            str += "Title: " + CATALOG[i].crs_title + CATALOG[i].crs_title_2 + "\n";
            str += "Credits: " + CATALOG[i].dflt_credit_hrs + "\n";
-           var text = CATALOG[i].catalog_text.replace(/\r\n/, "").replace(/\r/, "").replace(/\n/, "");
+           var text = CATALOG[i].catalog_text.replace("<b><u>Course Description</b></u><br><br ", "<b><u>Course Description</b></u><br><br> ").replace(/\r\n/, "").replace(/\r/, "").replace(/\n/, "");
            text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
            var endIndex = text.indexOf(postfix) >= 0 ? text.indexOf(postfix) : text.length;
            var desc = text.substr(0, endIndex).replace(/<br>/g, "\n").trim();

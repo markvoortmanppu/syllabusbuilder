@@ -3,7 +3,18 @@
 <div class="jumbotron">
   <h1>Syllabus Builder</h1>
   {{#if user}}
-    <p>Please click on Schoology in the menu above to get started.<br>For feedback or bugs please email <a href="mailto:mvoortman@pointpark.edu">mvoortman@pointpark.edu</a></p>
+    <p>Please click on Syllabi in the menu above to get started.<br>For feedback or bugs please email <a href="mailto:mvoortman@pointpark.edu">mvoortman@pointpark.edu</a> or fill out the feedback form.</p>
+    <p>
+      <b>Fall 2023 updates:</b>
+      <ul>
+        <li>The syllabus builder was modified given the change from Schoology to <b>Canvas</b>.</li>
+        <li>Some steps have <b>changed</b> but you can just walk through the process and answer all the questions.</li>
+        <li>It <b>remembers</b> previously entered content and so this does not have to be entered again.</li>
+        <li><b>Online</b> courses are now supported as well.</li>
+        <li>The generated syllabus as PDF needs to be uploaded to Canvas <b>manually</b> for now.</li>
+        <li>In the future, better <b>integration</b> with Canvas could be implemented.</li>
+      </ul>
+    </p>
   {{else}}
     <a class="btn btn-primary btn-large" href="{{signInUrl}}">Click here to login</a>
   {{/if}}

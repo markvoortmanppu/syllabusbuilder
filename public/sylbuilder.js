@@ -228,6 +228,14 @@
         return new Date(2023, 6, 3);
       }
     }
+    else if (info.Semester === "Fall 2023") {
+      if (info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2023, 7, 28);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2023, 9, 23);
+      }
+    }
     return null;
   }
   
@@ -374,19 +382,20 @@
       var springbreak = false;
       var minusduration = 0;
       var plusduration = 0;
-      if (days.length) {
+      if (true || days.length) {
+        var loopcnt = 0;
         while (cnt < duration + plusduration - (duration === 8 && (thanksgiving ? 1 : 0 || springbreak ? 1 : 0 || minusduration ? minusduration : 0))) {
           var counted = false;
-          for (var i = 0; i < days.length; i++) {
+          for (var i = 0; i === 0 || i < days.length; i++) {
             var tmpdate = new Date(date.getTime());
-            tmpdate.setDate(tmpdate.getDate() + mapping[days[i]]);
+            tmpdate.setDate(tmpdate.getDate() + (days.length ? mapping[days[i]] : 0));
             var datestr = (tmpdate.getMonth()+1)+"/"+tmpdate.getDate()+"/"+tmpdate.getFullYear();
-            if (isThanksgivingWeek(date)) {
+            if (days.length && isThanksgivingWeek(date)) {
               // skip the thanksgiving week
               template += "### Thanksgiving Break (" + datestr + ")\n";
               thanksgiving = true;
             }
-            else if (date.getFullYear() !== 2021 && isSpringBreakWeek(tmpdate, getFirstWeek(alldata.syllabus.info), alldata.syllabus.info.CourseType) && duration !== 8) {
+            else if (days.length && date.getFullYear() !== 2021 && isSpringBreakWeek(tmpdate, getFirstWeek(alldata.syllabus.info), alldata.syllabus.info.CourseType) && duration !== 8) {
               // skip the spring break week
               template += "### Spring Break (" + datestr + ")\n";
               springbreak = true;
@@ -397,7 +406,7 @@
             //    cnt++;
             //  }
             //}
-            else if (isMLKDay(tmpdate) && alldata.syllabus.info.CourseType === "15 Week") {
+            else if (days.length && isMLKDay(tmpdate) && alldata.syllabus.info.CourseType === "15 Week") {
               mlkday = true;
             }
             else {
@@ -406,28 +415,28 @@
                 cnt++;
               }
               modulecnt++;
-              template += "### Module " + modulecnt + ": \{{Module" + modulecnt + "Title" + days.length + "W}}";
-              if (cnt < 15 || !mlkday) {
+              template += "### Module " + modulecnt + ": \{{Module" + modulecnt + "Title" + (days.length ? days.length + "W" : "") + "}}";
+              if (days.length && (cnt < 15 || !mlkday)) {
                 template += " (" + datestr + ")";
               }
               template += "\n";
-              if (isLaborDay(tmpdate)) {
+              if (days.length && isLaborDay(tmpdate)) {
                 template += "**NOTE: CLASS DOES NOT MEET DUE TO LABOR DAY**\n";
               }
-              if (isMLKDay(tmpdate)) {
+              if (days.length && isMLKDay(tmpdate)) {
                 template += "**NOTE: CLASS DOES NOT MEET DUE TO MARTIN LUTHER KING DAY**\n";
               }
-              if (isMemorialDay(tmpdate)) {
+              if (days.length && isMemorialDay(tmpdate)) {
                 template += "**NOTE: CLASS DOES NOT MEET DUE TO MEMORIAL DAY**\n";
               }
-              if (isFourthOfJuly(tmpdate)) {
+              if (days.length && isFourthOfJuly(tmpdate)) {
                 template += "**NOTE: CLASS DOES NOT MEET DUE TO FOURTH OF JULY**\n";
               }
-              if (cnt === 15) {
+              if (days.length && cnt === 15) {
                 template += "**NOTE: FOR DAY CLASSES PLEASE CHECK THE FINAL EXAM SCHEDULE**\n";
                 template += "[https://www.pointpark.edu/About/AdminDepts/RegistrarsOffice/StudentResources/FinalExamsSchedule](https://www.pointpark.edu/About/AdminDepts/RegistrarsOffice/StudentResources/FinalExamsSchedule)\n";
               }
-              template += "\{{Module" + modulecnt + "Description" + days.length + "W}}\n";
+              template += "\{{Module" + modulecnt + "Description" + (days.length ? days.length + "W" : "") + "}}\n";
               template += "\n";
             }
           }
