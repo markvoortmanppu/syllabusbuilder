@@ -207,30 +207,32 @@
    for (var i = 0; i < data.syllabi.length; i++) {
      (function(i) {
        var syllabus = data.syllabi[i];
-       var info = syllabus.info;
-       if (info.SectionID && info.SectionID.endsWith(shortname)) {
-         added = true;
-         content.append("<hr>");
-         var a = $("<a>");
-         content.append(a);
-         a.addClass("btn btn-outline-primary btn-sm");
-         a.attr("href", "javascript:");
-         a.click(function() {
-           var parts = info.SectionID.split(" ");
-           parts.shift();
-           var sectionTitle = parts.join(" ");
-           selectSyllabus({
-             section: {
-               id: info.SectionID,
-               course_code: info.CourseCode,
-               course_title: info.CourseName,
-               section_title: sectionTitle,
-             }
+       if (syllabus) {
+         var info = syllabus.info;
+         if (info && info.SectionID && info.SectionID.endsWith(shortname)) {
+           added = true;
+           content.append("<hr>");
+           var a = $("<a>");
+           content.append(a);
+           a.addClass("btn btn-outline-primary btn-sm");
+           a.attr("href", "javascript:");
+           a.click(function() {
+             var parts = info.SectionID.split(" ");
+             parts.shift();
+             var sectionTitle = parts.join(" ");
+             selectSyllabus({
+               section: {
+                 id: info.SectionID,
+                 course_code: info.CourseCode,
+                 course_title: info.CourseName,
+                 section_title: sectionTitle,
+               }
+             });
            });
-         });
-         //a.append(section.course_code + " " + section.course_title + " " + parts[0]);
-         a.append(info.CourseCode + " " + info.CourseName + " " + info.Section);
-         content.append("<br>");
+           //a.append(section.course_code + " " + section.course_title + " " + parts[0]);
+           a.append(info.CourseCode + " " + info.CourseName + " " + info.Section);
+           content.append("<br>");
+         }
        }
      })(i);
    }
@@ -254,10 +256,12 @@
      var prefixes = [];
      var exclude = ["BA", "BMQA", "CENG", "CMLD", "CPS", "CR", "LDRD", "MIBM", "PROF", "SY", "TMGT", "UNIV"];
      for (var i = 0; i < catalog.length; i++) {
-       var prefix = catalog[i].adv_req_cde;
-       prefix = prefix.substring(0, prefix.length - 3).trim();
-       if (prefix && prefixes.indexOf(prefix) === -1 && exclude.indexOf(prefix) === -1) {
-         prefixes.push(prefix);
+       if (catalog[i]) {
+         var prefix = catalog[i].adv_req_cde;
+         prefix = prefix.substring(0, prefix.length - 3).trim();
+         if (prefix && prefixes.indexOf(prefix) === -1 && exclude.indexOf(prefix) === -1) {
+           prefixes.push(prefix);
+         }
        }
      }
      prefixes.sort();
@@ -289,7 +293,7 @@
      content.append("<b>Please select the specific course:</b><br>");
      for (var i = 0; i < catalog.length; i++) {
        (function(i) {
-         if (catalog[i].adv_req_cde.startsWith(prefix)) {
+         if (catalog[i] && catalog[i].adv_req_cde.startsWith(prefix)) {
            //var title = catalog[i].crs_title + (catalog[i].crs_title_2 ? " " + catalog[i].crs_title_2 : "");
            var title = catalog[i].crs_title + catalog[i].crs_title_2;
            if (catalog[i].adv_req_cde !== title) {
@@ -528,7 +532,7 @@
    var prefix = "</b></u><br><br>";
    var postfix = "<br><br><b><u>";
    for (var i = 0; i < catalog.length; i++) {
-     if (normalize(catalog[i].crs_cde) === code) {
+     if (catalog[i] && normalize(catalog[i].crs_cde) === code) {
        var data = {};
        data.CourseCode = normalize(catalog[i].crs_cde);
        data.CourseName = catalog[i].crs_title + catalog[i].crs_title_2;
@@ -583,7 +587,7 @@
    
    // store modality
    var section = alldata.syllabus.info.Section;
-   if (section[0] === "E") {
+   if (section[0] === "D" || section[0] === "E") {
      alldata.syllabus.info.Modality = "On-Ground";
    }
    else if (section.endsWith("ON")) {
