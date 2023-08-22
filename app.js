@@ -226,6 +226,14 @@ function createAndDownloadPdf(credentials, templatedata, syllabidata, sectionid,
     template = template.replace(regexp, entry.value?entry.value:"");
   }
 
+  // make sure semester is defined
+  if (!alldata.syllabus.info.Semester) {
+    cb({
+      error: "Semester information not found."
+    });
+    return;
+  }
+
   var parts = alldata.syllabus.info.Semester.split(" ");
   var semester = parts[0];
   var year = parts[1];
