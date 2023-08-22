@@ -293,6 +293,27 @@
      content.append("<b>Please select the specific course:</b><br>");
      for (var i = 0; i < catalog.length; i++) {
        (function(i) {
+         function ask() {
+           var section = (prompt("Please provide section (e.g., EA or OAON):") || "").toUpperCase().trim();
+           if (!section) {
+             showSyllabi(data);
+           }
+           else if (section.split(" ").length > 1) {
+             alert("No spaces allowed!");
+             ask();
+           }
+           else {
+             var sectionTitle = section + " " + semester;
+             selectSyllabus({
+               section: {
+                 id: catalog[i].adv_req_cde + " " + sectionTitle,
+                 course_code: catalog[i].adv_req_cde,
+                 course_title: title,
+                 section_title: sectionTitle
+               }
+             });
+           }
+         }
          if (catalog[i] && catalog[i].adv_req_cde.startsWith(prefix)) {
            //var title = catalog[i].crs_title + (catalog[i].crs_title_2 ? " " + catalog[i].crs_title_2 : "");
            var title = catalog[i].crs_title + catalog[i].crs_title_2;
@@ -303,22 +324,7 @@
              a.addClass("btn btn-outline-primary btn-sm");
              a.attr("href", "javascript:");
              a.click(function() {
-               var section = prompt("Please provide section (e.g., EA or OAON):");
-               if (!section) {
-                 showSyllabi(data);
-               }
-               else {
-                 section = section.toUpperCase().trim();
-                 var sectionTitle = section + " " + semester;
-                 selectSyllabus({
-                   section: {
-                     id: catalog[i].adv_req_cde + " " + sectionTitle,
-                     course_code: catalog[i].adv_req_cde,
-                     course_title: title,
-                     section_title: sectionTitle
-                   }
-                 });
-               }
+               ask();
              });
              a.append(catalog[i].adv_req_cde + " " + title);
              content.append("<br>");
