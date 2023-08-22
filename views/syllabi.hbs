@@ -254,12 +254,12 @@
      content.empty();
      content.append("<b>Please select the course prefix:</b><br>");
      var prefixes = [];
-     var exclude = ["BA", "BMQA", "CENG", "CMLD", "CPS", "CR", "LDRD", "MIBM", "PROF", "SY", "TMGT", "UNIV"];
+     var exclude = ["BA", "BMQA", "CENG", "CMLD", "CPS", "CR", "LDRD", "MIBM", "PROF", "RELS", "RESL", "SY", "TMGT", "UNIV"];
      for (var i = 0; i < catalog.length; i++) {
        if (catalog[i]) {
-         var prefix = catalog[i].adv_req_cde;
+         var prefix = normalize(catalog[i].crs_cde);
          prefix = prefix.substring(0, prefix.length - 3).trim();
-         if (prefix && prefixes.indexOf(prefix) === -1 && exclude.indexOf(prefix) === -1) {
+         if (prefix && prefixes.indexOf(prefix) === -1 && exclude.indexOf(prefix) === -1 && prefix.length > 2) {
            prefixes.push(prefix);
          }
        }
@@ -306,18 +306,18 @@
              var sectionTitle = section + " " + semester;
              selectSyllabus({
                section: {
-                 id: catalog[i].adv_req_cde + " " + sectionTitle,
-                 course_code: catalog[i].adv_req_cde,
+                 id: normalize(catalog[i].crs_cde) + " " + sectionTitle,
+                 course_code: normalize(catalog[i].crs_cde),
                  course_title: title,
                  section_title: sectionTitle
                }
              });
            }
          }
-         if (catalog[i] && catalog[i].adv_req_cde.startsWith(prefix)) {
+         if (catalog[i] && normalize(catalog[i].crs_cde).startsWith(prefix)) {
            //var title = catalog[i].crs_title + (catalog[i].crs_title_2 ? " " + catalog[i].crs_title_2 : "");
            var title = catalog[i].crs_title + catalog[i].crs_title_2;
-           if (catalog[i].adv_req_cde !== title) {
+           if (normalize(catalog[i].crs_cde) !== title) {
              content.append("<hr>");
              var a = $("<a>");
              content.append(a);
@@ -326,7 +326,7 @@
              a.click(function() {
                ask();
              });
-             a.append(catalog[i].adv_req_cde + " " + title);
+             a.append(normalize(catalog[i].crs_cde) + " " + title);
              content.append("<br>");
            }
          }
@@ -507,7 +507,7 @@
      }).done(function(data) {
        CATALOG = data;
        CATALOG.sort(function(x, y) {
-         return x.adv_req_cde.localeCompare(y.adv_req_cde);
+         return normalize(x.crs_cde).localeCompare(normalize(y.crs_cde));
        });
        cb(CATALOG);
      }).fail(fail);
