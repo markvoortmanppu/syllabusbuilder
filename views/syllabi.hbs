@@ -590,17 +590,21 @@
    if (section[0] === "D" || section[0] === "E") {
      alldata.syllabus.info.Modality = "On-Ground";
    }
-   else if (section.endsWith("ON")) {
-     alldata.syllabus.info.Modality = "Online (ON)";
+   else if (section[0] === "O") {
+     alldata.syllabus.info.Modality = "Online";
    }
-   else if (section.endsWith("DL")) {
-     alldata.syllabus.info.Modality = "Distance Learning (DL)";
-   }
-   else if (section.endsWith("RL")) {
-     alldata.syllabus.info.Modality = "Remote Learning (RL)";
+   else if (section[0] === "H") {
+     alldata.syllabus.info.Modality = "Hybrid";
    }
    else {
-      alldata.syllabus.info.Modality = "Unknown Modality";
+     alldata.syllabus.info.Modality = "Unknown";
+   }
+   // expand if necessary
+   if (section.endsWith("DL")) {
+     alldata.syllabus.info.Modality += " Distance Learning (DL)";
+   }
+   else if (section.endsWith("RL")) {
+     alldata.syllabus.info.Modality += " Remote Learning (RL)";
    }
    
    $("#content").append("<b>Course Type</b>");
