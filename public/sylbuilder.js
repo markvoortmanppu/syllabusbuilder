@@ -456,10 +456,11 @@
           alldata.syllabus.fields[property] = "";
         }
         var idx = template.indexOf("\{{"+property+"}}");
+        var value = alldata.syllabus.fields[property] ? alldata.syllabus.fields[property].trim() : alldata.syllabus.fields[property];
         var usetextarea = idx === 0 || (idx > 0 && template[idx-1] === "\n")
         data.push({
           property: property,
-          value: alldata.syllabus.fields[property],
+          value: value,
           usetextarea: usetextarea
         });
       }

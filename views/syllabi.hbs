@@ -1009,12 +1009,14 @@
      }
    });
    input.keyup(function() {
-     data[idx].value = input.val();
-     fields[data[idx].property] = input.val();
+     var value = input.val() ? input.val().trim() : input.val();
+     data[idx].value = value;
+     fields[data[idx].property] = value;
    });
    input.change(function() {
-     data[idx].value = input.val();
-     fields[data[idx].property] = input.val();
+     var value = input.val() ? input.val().trim() : input.val();
+     data[idx].value = value;
+     fields[data[idx].property] = value;
    });
    //input.focus();
  }
