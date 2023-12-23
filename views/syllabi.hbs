@@ -235,6 +235,23 @@
            });
            //a.append(section.course_code + " " + section.course_title + " " + parts[0]);
            a.append(info.CourseCode + " " + info.CourseName + " " + info.Section);
+           content.append(" ");
+           var a = $("<a>");
+           content.append(a);
+           a.addClass("btn btn-outline-danger btn-sm");
+           a.attr("href", "javascript:");
+           a.click(function() {
+             var value = prompt("Are you sure you want to delete this syllabus?\nNOTE: THIS ACTION IS IRREVERSIBLE\nPlease type 'delete' to proceed.");
+             if (value === "delete") {
+               content.empty();
+               content.append("Please wait ...");
+               data.syllabi.splice(i, 1);
+               save(data, function() {
+                 showSyllabi(data);
+               });
+             }
+           });
+           a.append("Delete");
            content.append("<br>");
          }
        }

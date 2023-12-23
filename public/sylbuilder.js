@@ -284,7 +284,7 @@
     }
     // fill in course info
     if (alldata.syllabus.info) {
-      var isSpecialTopics = alldata.syllabus.info.CourseCode && alldata.syllabus.info.CourseCode.endsWith("95");
+      var isSpecialTopics = alldata.syllabus.info.CourseCode && (alldata.syllabus.info.CourseCode.endsWith("90") || alldata.syllabus.info.CourseCode.endsWith("91") || alldata.syllabus.info.CourseCode.endsWith("92") || alldata.syllabus.info.CourseCode.endsWith("93") || alldata.syllabus.info.CourseCode.endsWith("94") || alldata.syllabus.info.CourseCode.endsWith("95") || alldata.syllabus.info.CourseCode.endsWith("96") || alldata.syllabus.info.CourseCode.endsWith("97") || alldata.syllabus.info.CourseCode.endsWith("98") || alldata.syllabus.info.CourseCode.endsWith("99"));
       for (var key in alldata.syllabus.info) {
         if (isSpecialTopics && (key === "CourseName" || key === "CourseDescription" || key === "CourseObjectives")) {
           if (typeof alldata.syllabus.fields[key] !== "string") {
