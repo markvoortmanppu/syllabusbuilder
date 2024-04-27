@@ -247,6 +247,14 @@
         return new Date(2024, 2, 4);
       }
     }
+    else if (info.Semester === "Summer 2024") {
+      if (info.CourseType === "12 Week" || info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2024, 4, 6);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2024, 6, 1);
+      }
+    }
     return null;
   }
   
