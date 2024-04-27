@@ -319,12 +319,12 @@
         duration = 12;
       }
       else if (alldata.syllabus.info.CourseType === "Term I" || alldata.syllabus.info.CourseType === "Term II") {
-        if (alldata.syllabus.info.Semester.startsWith("Summer")) {
-          duration = 6;
-        }
-        else {
-          duration = 8;
-        }
+        //if (alldata.syllabus.info.Semester.startsWith("Summer")) {
+        //  duration = 6;
+        //}
+        //else {
+        duration = 8;
+        //}
       }
       else if (alldata.syllabus.info.CourseType === "Evening Term I" || alldata.syllabus.info.CourseType === "Evening Term II") {
         duration = 8;
