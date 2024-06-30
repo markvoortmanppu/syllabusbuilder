@@ -561,15 +561,20 @@
  }
  
  function findcourse(catalog, code) {
-   var prefix = "</b></u><br><br>";
-   var postfix = "<br><br><b><u>";
+   var prefix = "</b></u>\n\n";
+   var postfix = "\n\n<b><u>";
+   // OLD
+   //var prefix = "</b></u><br><br>";
+   //var postfix = "<br><br><b><u>";
    for (var i = 0; i < catalog.length; i++) {
      if (catalog[i] && normalize(catalog[i].crs_cde) === code) {
        var data = {};
        data.CourseCode = normalize(catalog[i].crs_cde);
        data.CourseName = catalog[i].crs_title + (catalog[i].crs_title_2[0] && catalog[i].crs_title_2[0] === catalog[i].crs_title_2[0].toUpperCase() ? " " : "") + catalog[i].crs_title_2;
        data.Credits = catalog[i].dflt_credit_hrs;
-       var text = catalog[i].catalog_text.replace("<b><u>Course Description</b></u><br><br ", "<b><u>Course Description</b></u><br><br> ").replace(/\r\n/, "").replace(/\r/, "").replace(/\n/, "");
+       var text = CATALOG[i].catalog_text.replace(/<br>/g, "\n").replace(/<br /, "\n").replace(/<Br>/, "\n").replace(/\r/, "");
+       // OLD
+       //var text = catalog[i].catalog_text.replace("<b><u>Course Description</b></u><br><br ", "<b><u>Course Description</b></u><br><br> ").replace(/\r\n/, "").replace(/\r/, "").replace(/\n/, "");
        text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
        var endIndex = text.indexOf(postfix) >= 0 ? text.indexOf(postfix) : text.length;
        var desc = text.substr(0, endIndex).replace(/<br>/g, "\n").trim();
