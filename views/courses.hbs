@@ -31,8 +31,11 @@
    if (!CATALOG) {
      loadCatalogData();
    }
-   var prefix = "</b></u><br><br>";
-   var postfix = "<br><br><b><u>";
+   var prefix = "</b></u>\n\n";
+   var postfix = "\n\n<b><u>";
+   // OLD
+   //var prefix = "</b></u><br><br>";
+   //var postfix = "<br><br><b><u>";
    $("#input").bind("change keydown keyup", function() {
      var code = normalize($("#input").val());
      $("#output").val("No results.");
@@ -40,9 +43,9 @@
        for (var i = 0; i < CATALOG.length; i++) {
          if (normalize(CATALOG[i].crs_cde) === code) {
            var str = "Code: " + CATALOG[i].crs_cde + "\n";
-           str += "Title: " + CATALOG[i].crs_title + CATALOG[i].crs_title_2 + "\n";
+           str += "Title: " + CATALOG[i].crs_title + (CATALOG[i].crs_title_2[0] && CATALOG[i].crs_title_2[0] === CATALOG[i].crs_title_2[0].toUpperCase() ? " " : "") + CATALOG[i].crs_title_2 + "\n";
            str += "Credits: " + CATALOG[i].dflt_credit_hrs + "\n";
-           var text = CATALOG[i].catalog_text.replace("<b><u>Course Description</b></u><br><br ", "<b><u>Course Description</b></u><br><br> ").replace(/\r\n/, "").replace(/\r/, "").replace(/\n/, "");
+           var text = CATALOG[i].catalog_text.replace(/<br>/g, "\n").replace(/<br /, "\n").replace(/<Br>/, "\n").replace(/\r/, "");
            text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
            var endIndex = text.indexOf(postfix) >= 0 ? text.indexOf(postfix) : text.length;
            var desc = text.substr(0, endIndex).replace(/<br>/g, "\n").trim();
@@ -57,11 +60,36 @@
            str += "\nDescription:\n" + desc + "\n";
            text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
            var objectives = text.replace(/<br>/g, "\n").replace(/\n\n/g, "\n").trim();
+           objectives = objectives.split("\n").map(function (x) { return x.trim(); }).join("\n");
            str += "\nObjectives:\n" + objectives + "\n";
            str += "\n\n\n";
            str += CATALOG[i].catalog_text + "\n";
            str += "\n\n\n" + JSON.stringify(CATALOG[i], null, 2);
            $("#output").val(str);
+           // OLD
+           //var str = "Code: " + CATALOG[i].crs_cde + "\n";
+           //str += "Title: " + CATALOG[i].crs_title + CATALOG[i].crs_title_2 + "\n";
+           //str += "Credits: " + CATALOG[i].dflt_credit_hrs + "\n";
+           //var text = CATALOG[i].catalog_text.replace("<b><u>Course Description</b></u><br><br ", "<b><u>Course Description</b></u><br><br> ").replace(/\r\n/, "").replace(/\r/, "").replace(/\n/, "<br>");
+           //text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
+           //var endIndex = text.indexOf(postfix) >= 0 ? text.indexOf(postfix) : text.length;
+           //var desc = text.substr(0, endIndex).replace(/<br>/g, "\n").trim();
+           //text = text.substr(endIndex);
+           //var prereqs = "None.";
+           //var parts = desc.split("Prerequisite");
+           //if (parts.length === 2) {
+           //   desc = parts[0].trim();
+           //   prereqs = parts[1].substring(parts[1].indexOf(":") + 1).trim();
+           //}
+           //str += "Prerequisite(s): " + prereqs + "\n";
+           //str += "\nDescription:\n" + desc + "\n";
+           //text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
+           //var objectives = text.replace(/<br>/g, "\n").replace(/\n\n/g, "\n").trim();
+           //str += "\nObjectives:\n" + objectives + "\n";
+           //str += "\n\n\n";
+           //str += CATALOG[i].catalog_text + "\n";
+           //str += "\n\n\n" + JSON.stringify(CATALOG[i], null, 2);
+           //$("#output").val(str);
          }
        }
      }
