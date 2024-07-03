@@ -60,7 +60,7 @@
            str += "\nDescription:\n" + desc + "\n";
            text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
            var objectives = text.replace(/<br>/g, "\n").replace(/\n\n/g, "\n").trim();
-           objectives = objectives.split("\n").map(function (x) { return x.trim(); }).join("\n");
+           objectives = objectives.split("\n").map(function (x) { return x.trim(); }).filter(function(x) { return x; }).join("\n");
            str += "\nObjectives:\n" + objectives + "\n";
            str += "\n\n\n";
            str += CATALOG[i].catalog_text + "\n";

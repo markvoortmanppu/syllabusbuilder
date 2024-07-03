@@ -589,6 +589,7 @@
        data.Prerequisites = prereqs;
        text = text.substr(text.indexOf(prefix) + prefix.length, text.length).trim();
        var objectives = text.replace(/<br>/g, "\n").replace(/\n\n/g, "\n").trim();
+       objectives = objectives.split("\n").map(function (x) { return x.trim(); }).filter(function(x) { return x; }).join("\n");
        data.CourseObjectives = objectives;
        return data;
      }
