@@ -175,7 +175,7 @@ function createAndUploadPdf(templatedata, syllabidata, sectionid, cb) {
           });
         }
         else {
-          fs.rename(outfile, "data/pdfs/" + fname, function (err) {
+          fs.rename(outfile, "data/pdfs/" + fname.replace("/", "-"), function (err) {
             if (err) throw err;
             cb({});
           });
