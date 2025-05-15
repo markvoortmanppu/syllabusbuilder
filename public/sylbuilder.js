@@ -263,7 +263,7 @@
         return new Date(2024, 9, 21);
       }
     }
-      else if (info.Semester === "Spring 2025") {
+    else if (info.Semester === "Spring 2025") {
       if (info.CourseType === "15 Week") {
         return new Date(2025, 0, 6);
       }
@@ -272,6 +272,14 @@
       }
       if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
         return new Date(2025, 2, 3);
+      }
+    }
+    else if (info.Semester === "Summer 2025") {
+      if (info.CourseType === "12 Week" || info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2025, 4, 5);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2025, 5, 30);
       }
     }
     return null;
