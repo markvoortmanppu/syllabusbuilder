@@ -250,7 +250,7 @@ function createAndDownloadPdf(credentials, templatedata, syllabidata, sectionid,
 
   var tmpname = "/tmp/syllabus:" + Math.random().toString(36).substring(2, 15) + ".pdf";
   fs.writeFile(tmpname.replace(".pdf", ".md"), template.replace("![](https://pointparksyllabus.org/logo.png)", "![](https://pointparksyllabus.org/logo.png){ width=150px }"), function(err) {
-    exec("pandoc -f markdown+autolink_bare_uris+hard_line_breaks-raw_tex -V colorlinks=true -V linkcolor=blue -V urlcolor=blue -V toccolor=blue -V geometry:margin=1in --self-contained --pdf-engine=xelatex " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
+    exec("pandoc -f markdown+autolink_bare_uris+hard_line_breaks-raw_tex -V colorlinks=true -V linkcolor=blue -V urlcolor=blue -V toccolor=blue -V geometry:margin=1in --self-contained --pdf-engine=pdflatex " + tmpname.replace(".pdf", ".md") + " -o " + tmpname, (error, stdout, stderr) => {
       if (error) {
         console.log(`error: ${error.message}`);
         return;
