@@ -290,6 +290,14 @@
         return new Date(2025, 9, 20);
       }
     }
+    else if (info.Semester === "Spring 2026") {
+      if (info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
+        return new Date(2026, 0, 19);
+      }
+      if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
+        return new Date(2026, 2, 16);
+      }
+    }
     return null;
   }
   
