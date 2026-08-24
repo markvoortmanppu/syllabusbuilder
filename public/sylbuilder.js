@@ -308,10 +308,10 @@
     }
     else if (info.Semester === "Fall 2026") {
       if (info.CourseType === "15 Week" || info.CourseType === "Term I" || info.CourseType === "Evening Term I") {
-        return new Date(2025, 7, 31);
+        return new Date(2026, 7, 31);
       }
       if (info.CourseType === "Term II" || info.CourseType === "Evening Term II") {
-        return new Date(2025, 9, 26);
+        return new Date(2026, 9, 26);
       }
     }
     return null;
